@@ -75,15 +75,14 @@
     ],
     "forecast_success_cases": 6,
     "forecast_gallery_only_successes": true,
-    "figures": 39,
+    "figures": 37,
     "recognition_figures": 29,
     "gallery_cases": 13,
     "gallery_snapshots": 65,
     "sections": 23,
     "models": {
       "forecast": [
-        "GRU",
-        "Deep Sets"
+        "GRU"
       ],
       "recognition": [
         "GRU",
@@ -91,15 +90,15 @@
       ]
     },
     "test_previously_observed": true,
-    "pages": 41,
+    "pages": 39,
     "opening_overview_page": 1,
     "forecast_gallery_pages": [
-      8,
-      13
+      6,
+      11
     ],
-    "recognition_starts_on_page": 14
+    "recognition_starts_on_page": 12
   },
-  "pdf_sha256": "2d041eac44df82086ff9ff8f3856543cc16653d7d48cf223f3ca7cb256c252ef",
+  "pdf_sha256": "5d187bb5b08d73c7e74d9cfb66f6c9f3f220752967422e5f9cf2dd8e08442402",
   "gallery": {
     "passed": true,
     "cases": 13,
@@ -141,10 +140,11 @@
   },
   "forecast_browser": {
     "passed": true,
-    "url": "http://127.0.0.1:8878/forecast/",
+    "report_cases_ui_verified": 6,
+    "url": "http://127.0.0.1:8879/forecast/",
     "browser": "Firefox BiDi",
     "checks": [
-      "inferência dos dois modelos",
+      "inferência somente com GRU",
       "prefixo16/32",
       "horizonte5/30",
       "passo exato",
@@ -152,7 +152,7 @@
       "futuro real não altera previsão",
       "translação",
       "escala",
-      "permutação DeepSets",
+      "permutação do contexto",
       "pen-up",
       "categoria fornecida",
       "desenho por mouse",
@@ -160,7 +160,6 @@
       "desfazer",
       "390px sem overflow"
     ],
-    "gru_pixels": 1400,
-    "report_cases_ui_verified": 6
+    "gru_pixels": 1705
   }
 }

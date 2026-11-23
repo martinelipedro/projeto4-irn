@@ -1,6 +1,6 @@
 # Previsão de traços e reconhecimento de desenhos com redes neurais
 
-Estudamos duas tarefas de séries temporais sobre desenhos do Quick, Draw!, com as mesmas partições de 42 mil desenhos e 12 categorias. Na Parte I, uma GRU prevê os próximos 5, 15 ou 30 eventos da caneta, condicionada à categoria fornecida, e é comparada a Deep Sets com decoder comum. Mostramos continuações bem-sucedidas selecionadas na validação, mantendo a avaliação quantitativa completa do teste. Na Parte II, uma GRU e uma MLP convencional de imagem reconhecem a categoria a partir do desenho parcial, sem receber o rótulo como entrada. No desenho completo, a acurácia média foi 93,0% para a GRU e 83,7% para a MLP, uma diferença de 9,32 pontos percentuais (GRU menos MLP). Com apenas 25% dos eventos, os valores foram 63,6% e 51,5%, respectivamente. Em ambas as tarefas, hiperparâmetros e checkpoints são escolhidos pela validação e as configurações finais têm três inicializações. O relatório combina aprendizagem, métricas e exemplos visuais, distinguindo seleção qualitativa de casos e desempenho agregado. O teste já havia sido observado em estudos anteriores; os resultados não constituem confirmação externa inédita.
+Estudamos duas tarefas de séries temporais sobre desenhos do Quick, Draw!, com as mesmas partições de 42 mil desenhos e 12 categorias. Na Parte I, uma GRU prevê os próximos 5, 15 ou 30 eventos da caneta, condicionada à categoria fornecida. Mostramos continuações bem-sucedidas selecionadas na validação, mantendo a avaliação quantitativa completa do teste. Na Parte II, uma GRU e uma MLP convencional de imagem reconhecem a categoria a partir do desenho parcial, sem receber o rótulo como entrada. No desenho completo, a acurácia média foi 93,0% para a GRU e 83,7% para a MLP, uma diferença de 9,32 pontos percentuais (GRU menos MLP). Com apenas 25% dos eventos, os valores foram 63,6% e 51,5%, respectivamente. Em ambas as tarefas, hiperparâmetros e checkpoints são escolhidos pela validação e as configurações finais têm três inicializações. O relatório combina aprendizagem, métricas e exemplos visuais, distinguindo seleção qualitativa de casos e desempenho agregado. O teste já havia sido observado em estudos anteriores; os resultados não constituem confirmação externa inédita.
 
 ## O que fizemos?
 
@@ -10,7 +10,7 @@ Os dados vêm do Google Quick, Draw!, um jogo em que pessoas desenham objetos so
 
 Nosso recorte contém 42.000 desenhos de 12 categorias. São 36.000 para treinamento, 3.000 para validação e 3.000 para teste. Retivemos desenhos reconhecidos pelo jogo e mantivemos cada desenho inteiro em uma única partição, compartilhada pelos dois experimentos.
 
-A previsão usa uma GRU e um comparador Deep Sets sobre os mesmos movimentos, com saída de posições, caneta e tempo. A categorização compara uma GRU temporal a uma MLP convencional sobre pixels. A categoria é entrada apenas na previsão; no reconhecimento, é somente o alvo de ensino e avaliação.
+A previsão usa uma GRU, com saída de posições, caneta e tempo. A categorização compara uma GRU temporal a uma MLP convencional sobre pixels. A categoria é entrada apenas na previsão; no reconhecimento, é somente o alvo de ensino e avaliação.
 
 Ajustamos larguras e taxas na validação, repetimos as configurações escolhidas com três inicializações e medimos os resultados em teste. As páginas de previsão destacam situações coerentes e bem-sucedidas; as médias do teste permanecem completas. As páginas de reconhecimento acompanham hipóteses que mudam enquanto o desenho cresce. O site permite explorar as duas tarefas com os modelos treinados.
 
@@ -25,7 +25,7 @@ Ajustamos larguras e taxas na validação, repetimos as configurações escolhid
 
 ### O que significa prever t+k?
 
-Nesta primeira parte, o modelo observa uma janela de movimentos até o evento t e prevê onde a caneta estará nos eventos t+1 até t+k. O alvo é uma sequência futura de posições, estados da caneta e intervalos de tempo. Por exemplo, com t=32 e k=15, entregamos somente os primeiros 32 eventos e comparamos a saída com os eventos reais 33 a 47. O modelo não recebe esses 15 eventos durante a inferência.
+A GRU observa uma janela de movimentos até o evento t e prevê onde a caneta estará nos eventos t+1 até t+k. O alvo é uma sequência futura de posições, estados da caneta e intervalos de tempo. Por exemplo, com t=32 e k=15, entregamos somente os primeiros 32 eventos e comparamos a saída com os eventos reais 33 a 47. O modelo não recebe esses 15 eventos durante a inferência.
 
 A categoria do desenho é fornecida nesta tarefa: ao pedir uma continuação de Peixe, já informamos Peixe à rede. Reconhecer a categoria é uma tarefa diferente, tratada na segunda parte, em que esse rótulo deixa de ser entrada e passa a ser a saída. Os pesos de previsão e de reconhecimento são treinados separadamente, embora os desenhos e as partições de origem sejam os mesmos.
 
@@ -50,61 +50,47 @@ Reutilizamos as partições de 36 mil desenhos de treino, 3 mil de validação e
 
 Cada evento fornece seis atributos: deslocamentos X/Y divididos pela escala de treino de 28,80 pixels, pen-up, log(1+Δt/0,1), e posições relativas ao primeiro ponto divididas por 256. A categoria vira um embedding de 16 dimensões, formando 22 atributos por evento. Nesta tarefa não usamos a normalização pela caixa do prefixo adotada no reconhecimento. A representação remove translação, mas não garante invariância de escala.
 
-A GRU resume a janela em um estado recorrente. O comparador Deep Sets aplica uma MLP a cada evento e agrega por média, usando os mesmos atributos e o mesmo decoder. Ele não é a MLP de pixels da segunda parte. Ambos recebem deslocamentos e relógio, e o referencial do decoder usa a direção recente: a ausência de recorrência não elimina toda informação temporal local.
+A GRU atualiza seu estado a cada evento. O último estado resume a janela e alimenta o decoder, que estima a continuação usando a última posição e a direção recente da caneta.
 
 O decoder escolhe uma entre 64 trajetórias-base por categoria, aprendidas somente no treino, e estima correções de posição, probabilidades de caneta/fim e intervalos positivos. Na inferência determinística, o modo é escolhido pela própria rede; não escolhemos depois o modo mais próximo do futuro real. Nenhum ponto real novo é realimentado para corrigir a trajetória prevista.
 
-![Previsão: GRU e Deep Sets compartilham entrada condicionada, banco de modos e decoder. São modelos distintos dos classificadores da segunda parte.](../figures/a_arquiteturas.png)
-
-Previsão: GRU e Deep Sets compartilham entrada condicionada, banco de modos e decoder. São modelos distintos dos classificadores da segunda parte.
-
 ### Ajuste da topologia e das taxas por validação
 
-A busca de previsão considera H=128/192 e taxas 0,001/0,0005 nas duas famílias. O orçamento é de 20 épocas, lote 128, AdamW, weight decay 0,00001, gradientes limitados em 1 e taxa cossenoidal até 10% da inicial. A escala isotrópica 0,8–1,2 varia somente no treino. Quatro candidatos são examinados com a seed 42; dois finalistas são repetidos com 43, e a decisão usa a média dessas duas inicializações. A seed 44 replica a vencedora sem participar da escolha.
+Para a GRU, testamos 128 e 192 unidades ocultas e taxas iniciais de 0,001 e 0,0005. O orçamento é de 20 épocas, lote 128, AdamW, weight decay 0,00001, gradientes limitados em 1 e taxa cossenoidal até 10% da inicial. A escala isotrópica 0,8–1,2 varia somente no treino. Examinamos quatro candidatos com a seed 42 e repetimos os dois finalistas com a seed 43. A decisão usa a média dessas duas inicializações. A seed 44 replica a vencedora sem participar da escolha.
 
 O checkpoint minimiza a média de ADE/256 +0,1 ×fim precoce nos três horizontes, usando os primeiros 100 desenhos de validação por categoria. A escolha externa usa a validação completa, acrescenta 0,02 ×(1−F1 de pen-up) e compara limiares de caneta 0,2/0,35/0,5. A perda de treino combina classificação do modo, Huber de posição e velocidade, classificação da caneta, erro do relógio e suavidade das correções.
 
-Todos os modelos foram inicializados do zero. Na montagem desta comparação, quatro execuções GRU completas e compatíveis já existentes foram reaproveitadas, com hashes registrados; seus pesos não inicializam outro treinamento. Os demais treinos e réplicas seguem o mesmo protocolo. O teste já havia sido observado em estudos anteriores e não é uma confirmação externa inédita.
+A validação escolheu 192 unidades ocultas, taxa inicial de 0,001 e limiar de pen-up de 0,2. As quatro execuções de triagem foram reaproveitadas de um estudo com o mesmo protocolo. Todos os candidatos e réplicas partiram de pesos novos. A partição de teste já havia sido observada em estudos anteriores.
 
 **Triagem de previsão: seed 42, menor escore é melhor**
 
-| Rede | H | Taxa | Época | Validação |
-|---|---|---|---|---|
-| GRU | 128 | 0,0010 | 17 | 0,3963 |
-| GRU | 128 | 0,0005 | 20 | 0,4204 |
-| GRU | 192 | 0,0010 | 18 | 0,3802 |
-| GRU | 192 | 0,0005 | 17 | 0,4055 |
-| Deep Sets | 128 | 0,0010 | 16 | 0,4461 |
-| Deep Sets | 128 | 0,0005 | 16 | 0,4543 |
-| Deep Sets | 192 | 0,0010 | 16 | 0,4402 |
-| Deep Sets | 192 | 0,0005 | 18 | 0,4512 |
+| H | Taxa | Época | Validação |
+|---|---|---|---|
+| 128 | 0,0010 | 17 | 0,3963 |
+| 128 | 0,0005 | 20 | 0,4204 |
+| 192 | 0,0010 | 18 | 0,3802 |
+| 192 | 0,0005 | 17 | 0,4055 |
 
 **Finalistas de previsão: seleção pela média 42/43**
 
-| Rede | H | Taxa | Seed 42 | Seed 43 | Média |
-|---|---|---|---|---|---|
-| GRU | 192 | 0,0010 | 0,3802 | 0,3798 | 0,3800 |
-| GRU | 128 | 0,0010 | 0,3963 | 0,3912 | 0,3937 |
-| Deep Sets | 192 | 0,0010 | 0,4402 | 0,4376 | 0,4389 |
-| Deep Sets | 128 | 0,0010 | 0,4461 | 0,4449 | 0,4455 |
-
-![Comparação dos candidatos de previsão exclusivamente na validação.](../figures/c_busca.png)
-
-Comparação dos candidatos de previsão exclusivamente na validação.
+| H | Taxa | Seed 42 | Seed 43 | Média |
+|---|---|---|---|---|
+| 192 | 0,0010 | 0,3802 | 0,3798 | 0,3800 |
+| 128 | 0,0010 | 0,3963 | 0,3912 | 0,3937 |
 
 ### Curvas de aprendizagem da previsão
 
-As curvas acompanham as configurações escolhidas nas três inicializações. A perda composta de treino e o objetivo de trajetória na validação têm fórmulas e populações diferentes; sua escala não deve ser comparada diretamente. A estrela identifica o checkpoint selecionado, preservado para a avaliação e para os exemplos. A escolha não usa os desenhos que aparecem nas páginas seguintes como um novo conjunto de treinamento.
+As curvas acompanham a configuração final da GRU nas três inicializações. A perda composta de treino e o objetivo de trajetória na validação têm fórmulas e populações diferentes; sua escala não deve ser comparada diretamente. A estrela identifica o checkpoint selecionado, preservado para a avaliação e para os exemplos. A escolha não usa os desenhos que aparecem nas páginas seguintes como um novo conjunto de treinamento.
 
-![Aprendizagem dos previsores: perda de treino e objetivo de validação ao longo das 20 épocas, seeds 42/43/44.](../figures/d_aprendizagem.png)
+![Aprendizagem da GRU ao longo das 20 épocas. Cada estrela marca o checkpoint escolhido na validação.](../figures/forecast_gru_learning.png)
 
-Aprendizagem dos previsores: perda de treino e objetivo de validação ao longo das 20 épocas, seeds 42/43/44.
+Aprendizagem da GRU ao longo das 20 épocas. Cada estrela marca o checkpoint escolhido na validação.
 
 ### Avaliação do conjunto e significado das métricas
 
 ADE é a distância média, em pixels, entre cada ponto previsto e o ponto humano correspondente. FDE mede a distância no último evento do horizonte. O F1 de pen-up verifica a separação de traços e o MAE de Δt mede o erro por intervalo em segundos. Uma curva pode ficar próxima e ainda errar um levantamento ou uma pausa; por isso essas dimensões são separadas.
 
-A tabela preserva as médias das três inicializações sobre todo o teste elegível, com os mesmos prefixos 16/32 e alvos em cada comparação. Horizontes distintos exigem quantidades distintas de futuro disponível. A seleção dos bons exemplos visuais não altera esses valores. A galeria mostra situações em que o modelo funcionou; não afirma que todos os desenhos tenham essa qualidade.
+A tabela preserva as médias das três inicializações sobre todo o teste elegível, com prefixos de 16 e 32 eventos e futuro real disponível até o horizonte avaliado. Horizontes distintos exigem quantidades distintas de futuro disponível. A seleção dos bons exemplos visuais não altera esses valores. A galeria mostra situações em que o modelo funcionou; não afirma que todos os desenhos tenham essa qualidade.
 
 $$
 \operatorname{ADE}_k=\frac{1}{k}\sum_{j=1}^{k}\|\widehat{\mathbf p}_{t+j}-\mathbf p_{t+j}\|_2,\qquad\operatorname{FDE}_k=\|\widehat{\mathbf p}_{t+k}-\mathbf p_{t+k}\|_2.
@@ -112,18 +98,15 @@ $$
 
 **Previsão no teste: médias das seeds 42/43/44**
 
-| k | Rede | ADE (px) | FDE (px) | F1 caneta | MAE Δt (s) |
+| k | Janelas | ADE (px) | FDE (px) | F1 caneta | MAE Δt (s) |
 |---|---|---|---|---|---|
-| 5 | GRU | 44,67 | 71,31 | 0,131 | 0,059 |
-| 5 | Deep Sets | 49,96 | 81,43 | 0,080 | 0,061 |
-| 15 | GRU | 94,83 | 149,23 | 0,109 | 0,061 |
-| 15 | Deep Sets | 110,47 | 175,85 | 0,083 | 0,063 |
-| 30 | GRU | 138,57 | 196,47 | 0,115 | 0,062 |
-| 30 | Deep Sets | 161,19 | 228,35 | 0,092 | 0,063 |
+| 5 | 5914 | 44,67 | 71,31 | 0,131 | 0,059 |
+| 15 | 5771 | 94,83 | 149,23 | 0,109 | 0,061 |
+| 30 | 5236 | 138,57 | 196,47 | 0,115 | 0,062 |
 
-![Curvas diagnósticas da seed 42 nos horizontes 5/15/30; a tabela acima agrega as três inicializações.](../figures/01_horizons_comparison.png)
+![ADE e FDE da GRU por horizonte, na média das três inicializações.](../figures/forecast_gru_error.png)
 
-Curvas diagnósticas da seed 42 nos horizontes 5/15/30; a tabela acima agrega as três inicializações.
+ADE e FDE da GRU por horizonte, na média das três inicializações.
 
 ### Galeria de previsões que fizeram sentido
 
@@ -241,7 +224,7 @@ Triagem dos quatro candidatos por família, todos inicializados do zero. A sele�
 
 #### Capacidade e curvas de aprendizagem
 
-A MLP de imagem não utiliza Deep Sets. Ela achata a imagem e aplica camadas densas; cada pixel mantém sua posição espacial no vetor, mas a ordem em que as linhas foram desenhadas desaparece. As larguras não igualam exatamente a quantidade de parâmetros: registramos a capacidade e o custo efetivos para tornar essa diferença verificável. Tempos de treino são da configuração escolhida com a seed 42 na GPU registrada; não incluem preparação, busca inteira ou exportação e não medem a latência do navegador. A GPU do treinamento de reconhecimento foi NVIDIA GeForce RTX 4050 Laptop GPU, com float32, algoritmos determinísticos habilitados e TF32 desligado. As curvas permitem distinguir subajuste, saturação e afastamento entre treino e validação. Uma menor perda de treino por si só não determina o vencedor: usamos o checkpoint selecionado e depois comparamos as previsões no mesmo teste.
+A MLP achata a imagem e aplica camadas densas; cada pixel mantém sua posição espacial no vetor, mas a ordem em que as linhas foram desenhadas desaparece. As larguras não igualam exatamente a quantidade de parâmetros: registramos a capacidade e o custo efetivos para tornar essa diferença verificável. Tempos de treino são da configuração escolhida com a seed 42 na GPU registrada; não incluem preparação, busca inteira ou exportação e não medem a latência do navegador. A GPU do treinamento de reconhecimento foi NVIDIA GeForce RTX 4050 Laptop GPU, com float32, algoritmos determinísticos habilitados e TF32 desligado. As curvas permitem distinguir subajuste, saturação e afastamento entre treino e validação. Uma menor perda de treino por si só não determina o vencedor: usamos o checkpoint selecionado e depois comparamos as previsões no mesmo teste.
 
 **Configurações finais e custo observado**
 
@@ -319,7 +302,7 @@ Duas apresentações do mesmo passado observado. O mapa mostra até 36 eventos e
 
 #### O que a recorrência pode acrescentar
 
-A GRU atualiza um estado oculto em cada evento. Portas de atualização e de reset regulam quanto do estado anterior é retido e como os novos movimentos entram na representação. Isso oferece uma forma aprendida de combinar o caminho dos traços, sua ordem e as pausas. A MLP recebe todos os pixels do prefixo de uma vez e pode reconhecer estrutura espacial, inclusive antes do fim; sua entrada não permite recuperar de maneira única a ordem usada para produzir uma imagem. Concatenar pontos num vetor e passá-los a uma MLP convencional seria outro controle válido, mas não eliminaria a ordem: cada posição do vetor corresponderia a um instante. Optamos pelo raster porque a pergunta atual é o contraste entre leitura temporal e observação da forma parcial. Como também mudamos a representação, não isolamos uma vantagem causal da GRU sobre toda rede densa possível. Deep Sets aparece na Parte I de previsão, com identificação explícita.
+A GRU atualiza um estado oculto em cada evento. Portas de atualização e de reset regulam quanto do estado anterior é retido e como os novos movimentos entram na representação. Isso oferece uma forma aprendida de combinar o caminho dos traços, sua ordem e as pausas. A MLP recebe todos os pixels do prefixo de uma vez e pode reconhecer estrutura espacial, inclusive antes do fim; sua entrada não permite recuperar de maneira única a ordem usada para produzir uma imagem. Concatenar pontos num vetor e passá-los a uma MLP convencional seria outro controle válido, mas não eliminaria a ordem: cada posição do vetor corresponderia a um instante. Optamos pelo raster porque a pergunta atual é o contraste entre leitura temporal e observação da forma parcial. Como também mudamos a representação, não isolamos uma vantagem causal da GRU sobre toda rede densa possível.
 
 $$
 \mathbf r_i=\sigma(W_r\mathbf u_i+U_r\mathbf h_{i-1}+\mathbf b_r),\quad \mathbf z_i=\sigma(W_z\mathbf u_i+U_z\mathbf h_{i-1}+\mathbf b_z),
@@ -604,5 +587,4 @@ A previsão estima movimentos futuros com uma categoria já fornecida; o reconhe
 
 - [Google Creative Lab — documentação e licença do Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset)
 - [Cho et al. (2014) — Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation (GRU)](https://arxiv.org/abs/1406.1078)
-- [Zaheer et al. (2017) — Deep Sets (comparador da Parte I)](https://arxiv.org/abs/1703.06114)
 - [Código, configurações e resultados do projeto](https://github.com/martinelipedro/projeto4-irn)

@@ -28,7 +28,7 @@
     "Carro",
     "Bicicleta"
   ],
-  "selection_note": "Somente validação; primeiros IDs elegíveis, descritores do passado e vitórias explicitamente rotuladas. Nenhum caso foi escolhido por ser o melhor acerto de teste.",
+  "selection_note": "Exemplos de validação para explorar a previsão da GRU.",
   "examples": [
     {
       "id": "4533572973101056",
@@ -529,47 +529,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 1,
         "pen_up_count": 2,
         "length": 32,
         "ink_length": 587.599365234375,
         "past_extent": 172.96200561523438
-      },
-      "metrics": {
-        "gru": {
-          "ade": 57.89602279663086,
-          "fde": 109.61787414550781,
-          "clock_mae": 0.30065152049064636,
-          "elapsed_error": 8.484579086303711,
-          "pen_tp": 0,
-          "pen_fp": 2,
-          "pen_fn": 9,
-          "premature_end": 0.0,
-          "ade_pixels": 57.89602279663086,
-          "fde_pixels": 109.61787414550781
-        },
-        "mlp": {
-          "ade": 138.9541473388672,
-          "fde": 198.2644500732422,
-          "clock_mae": 0.3133772909641266,
-          "elapsed_error": 8.133413314819336,
-          "pen_tp": 8,
-          "pen_fp": 20,
-          "pen_fn": 1,
-          "premature_end": 1.0,
-          "ade_pixels": 138.9541473388672,
-          "fde_pixels": 198.2644500732422
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4518738671960064",
@@ -1268,47 +1236,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 0,
         "length": 32,
         "ink_length": 575.133056640625,
         "past_extent": 267.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 277.38702392578125,
-          "fde": 552.0408935546875,
-          "clock_mae": 0.056122977286577225,
-          "elapsed_error": 0.3294752836227417,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 277.38702392578125,
-          "fde_pixels": 552.0408935546875
-        },
-        "mlp": {
-          "ade": 154.9423370361328,
-          "fde": 306.7650451660156,
-          "clock_mae": 0.05537591874599457,
-          "elapsed_error": 0.4858267307281494,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 154.9423370361328,
-          "fde_pixels": 306.7650451660156
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4506332747005952",
@@ -1741,52 +1677,17 @@
       "default_cut": 32,
       "default_horizon": 30,
       "themes": [
-        "prefixo",
-        "mlp_vence"
+        "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos. Primeiro ID de validação em que a MLP tem menor ADE30, não o melhor caso.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão. Exemplo escolhido na validação para mostrar uma falha relativa da GRU; não é uma estimativa de desempenho em teste.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 2,
         "length": 32,
         "ink_length": 529.0870361328125,
         "past_extent": 273.3330078125
-      },
-      "metrics": {
-        "gru": {
-          "ade": 121.17137908935547,
-          "fde": 133.16883850097656,
-          "clock_mae": 0.039100732654333115,
-          "elapsed_error": 0.11825525760650635,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 121.17137908935547,
-          "fde_pixels": 133.16883850097656
-        },
-        "mlp": {
-          "ade": 98.78855895996094,
-          "fde": 195.2919921875,
-          "clock_mae": 0.0470244362950325,
-          "elapsed_error": 0.17521214485168457,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 98.78855895996094,
-          "fde_pixels": 195.2919921875
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-        "Primeiro ID de validação em que a MLP tem menor ADE30, não o melhor caso."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
-        "Exemplo escolhido na validação para mostrar uma falha relativa da GRU; não é uma estimativa de desempenho em teste."
-      ]
+      }
     },
     {
       "id": "4504638583734272",
@@ -2358,54 +2259,17 @@
       "default_horizon": 30,
       "themes": [
         "prefixo",
-        "ordem",
-        "gru_vence"
+        "ordem"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos. Primeiro ID de validação com no máximo um pen-up no prefixo32. Primeiro ID de validação em que a GRU tem menor ADE30, não o melhor caso.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão. O teste de ordem permuta vetores já codificados e preserva o quadro do decoder; pode produzir sequências não físicas. Exemplo escolhido na validação para mostrar uma vantagem relativa da GRU, sem representar todos os desenhos.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 1,
         "length": 32,
         "ink_length": 511.502685546875,
         "past_extent": 259.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 287.3055114746094,
-          "fde": 273.41510009765625,
-          "clock_mae": 0.049717649817466736,
-          "elapsed_error": 0.21570980548858643,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 287.3055114746094,
-          "fde_pixels": 273.41510009765625
-        },
-        "mlp": {
-          "ade": 324.51220703125,
-          "fde": 377.7044372558594,
-          "clock_mae": 0.04733014851808548,
-          "elapsed_error": 0.14281296730041504,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 324.51220703125,
-          "fde_pixels": 377.7044372558594
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-        "Primeiro ID de validação com no máximo um pen-up no prefixo32.",
-        "Primeiro ID de validação em que a GRU tem menor ADE30, não o melhor caso."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
-        "O teste de ordem permuta vetores já codificados e preserva o quadro do decoder; pode produzir sequências não físicas.",
-        "Exemplo escolhido na validação para mostrar uma vantagem relativa da GRU, sem representar todos os desenhos."
-      ]
+      }
     },
     {
       "id": "4505355939741696",
@@ -2864,47 +2728,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 2,
         "length": 32,
         "ink_length": 500.2977600097656,
         "past_extent": 242.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 15.068961143493652,
-          "fde": 8.804244995117188,
-          "clock_mae": 0.054621223360300064,
-          "elapsed_error": 0.9248316287994385,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 0,
-          "premature_end": 0.0,
-          "ade_pixels": 15.068961143493652,
-          "fde_pixels": 8.804244995117188
-        },
-        "mlp": {
-          "ade": 118.64295196533203,
-          "fde": 187.82676696777344,
-          "clock_mae": 0.054346032440662384,
-          "elapsed_error": 0.31491661071777344,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 0,
-          "premature_end": 0.0,
-          "ade_pixels": 118.64295196533203,
-          "fde_pixels": 187.82676696777344
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4525197598130176",
@@ -3411,47 +3243,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 1,
         "length": 32,
         "ink_length": 597.6806640625,
         "past_extent": 511.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 184.1923370361328,
-          "fde": 279.2005920410156,
-          "clock_mae": 0.059377577155828476,
-          "elapsed_error": 1.0594630241394043,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 184.1923370361328,
-          "fde_pixels": 279.2005920410156
-        },
-        "mlp": {
-          "ade": 301.5769348144531,
-          "fde": 606.0700073242188,
-          "clock_mae": 0.051114484667778015,
-          "elapsed_error": 0.9305065870285034,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 301.5769348144531,
-          "fde_pixels": 606.0700073242188
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4510215661682688",
@@ -4498,47 +4298,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 0,
         "length": 32,
         "ink_length": 527.3442993164062,
         "past_extent": 305.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 30.401403427124023,
-          "fde": 90.06076049804688,
-          "clock_mae": 0.01869293302297592,
-          "elapsed_error": 0.5607880353927612,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 0,
-          "premature_end": 0.0,
-          "ade_pixels": 30.401403427124023,
-          "fde_pixels": 90.06076049804688
-        },
-        "mlp": {
-          "ade": 74.6980972290039,
-          "fde": 163.060791015625,
-          "clock_mae": 0.009065261110663414,
-          "elapsed_error": 0.10295122861862183,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 0,
-          "premature_end": 0.0,
-          "ade_pixels": 74.6980972290039,
-          "fde_pixels": 163.060791015625
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4510140269068288",
@@ -4991,47 +4759,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 0,
         "length": 32,
         "ink_length": 610.6046142578125,
         "past_extent": 281.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 195.4086456298828,
-          "fde": 496.2371826171875,
-          "clock_mae": 0.09436280280351639,
-          "elapsed_error": 2.536956310272217,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 3,
-          "premature_end": 0.0,
-          "ade_pixels": 195.4086456298828,
-          "fde_pixels": 496.2371826171875
-        },
-        "mlp": {
-          "ade": 82.5533447265625,
-          "fde": 61.338924407958984,
-          "clock_mae": 0.09618508815765381,
-          "elapsed_error": 1.8548498153686523,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 3,
-          "premature_end": 0.0,
-          "ade_pixels": 82.5533447265625,
-          "fde_pixels": 61.338924407958984
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4515894615080960",
@@ -5502,47 +5238,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 1,
         "length": 32,
         "ink_length": 563.4037475585938,
         "past_extent": 284.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 136.92295837402344,
-          "fde": 97.44569396972656,
-          "clock_mae": 0.12187549471855164,
-          "elapsed_error": 3.374107599258423,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 4,
-          "premature_end": 0.0,
-          "ade_pixels": 136.92295837402344,
-          "fde_pixels": 97.44569396972656
-        },
-        "mlp": {
-          "ade": 137.84072875976562,
-          "fde": 90.45628356933594,
-          "clock_mae": 0.11947360634803772,
-          "elapsed_error": 3.1024398803710938,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 4,
-          "premature_end": 0.0,
-          "ade_pixels": 137.84072875976562,
-          "fde_pixels": 90.45628356933594
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4515781272403968",
@@ -6139,47 +5843,15 @@
       "themes": [
         "prefixo"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 0,
         "length": 32,
         "ink_length": 508.6082458496094,
         "past_extent": 311.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 42.636314392089844,
-          "fde": 127.22647094726562,
-          "clock_mae": 0.043815795332193375,
-          "elapsed_error": 0.5390230417251587,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 42.636314392089844,
-          "fde_pixels": 127.22647094726562
-        },
-        "mlp": {
-          "ade": 40.63908004760742,
-          "fde": 110.69435119628906,
-          "clock_mae": 0.04227882996201515,
-          "elapsed_error": 0.7469655275344849,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 1,
-          "premature_end": 0.0,
-          "ade_pixels": 40.63908004760742,
-          "fde_pixels": 110.69435119628906
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão."
-      ]
+      }
     },
     {
       "id": "4506849195851776",
@@ -7047,49 +6719,15 @@
         "prefixo",
         "translacao_escala"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos. Primeiro ID de validação com pelo menos94eventos.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão. A translação cancela nas features relativas de ambas as redes. Escala altera os deslocamentos e não é invariância garantida.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 1,
         "length": 32,
         "ink_length": 598.58837890625,
         "past_extent": 414.3999938964844
-      },
-      "metrics": {
-        "gru": {
-          "ade": 144.48777770996094,
-          "fde": 334.1783752441406,
-          "clock_mae": 0.034206222742795944,
-          "elapsed_error": 0.3349462151527405,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 0,
-          "premature_end": 0.0,
-          "ade_pixels": 144.48777770996094,
-          "fde_pixels": 334.1783752441406
-        },
-        "mlp": {
-          "ade": 135.5364532470703,
-          "fde": 299.0329284667969,
-          "clock_mae": 0.04324587807059288,
-          "elapsed_error": 0.18122458457946777,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 0,
-          "premature_end": 0.0,
-          "ade_pixels": 135.5364532470703,
-          "fde_pixels": 299.0329284667969
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-        "Primeiro ID de validação com pelo menos94eventos."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
-        "A translação cancela nas features relativas de ambas as redes. Escala altera os deslocamentos e não é invariância garantida."
-      ]
+      }
     },
     {
       "id": "4512400944398336",
@@ -7621,49 +7259,15 @@
         "prefixo",
         "caneta"
       ],
-      "selection_rule": "Primeiro ID elegível da categoria na validação, pelo menos62eventos. Primeiro ID de validação com pelo menos três eventos pen-up no prefixo32.",
-      "explanation": "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão. As separações entre traços e os saltos também fazem parte da sequência.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 1,
         "pen_up_count": 3,
         "length": 32,
         "ink_length": 470.37554931640625,
         "past_extent": 283.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 73.3889389038086,
-          "fde": 90.9634017944336,
-          "clock_mae": 0.09118186682462692,
-          "elapsed_error": 1.9519729614257812,
-          "pen_tp": 0,
-          "pen_fp": 2,
-          "pen_fn": 4,
-          "premature_end": 0.0,
-          "ade_pixels": 73.3889389038086,
-          "fde_pixels": 90.9634017944336
-        },
-        "mlp": {
-          "ade": 74.34395599365234,
-          "fde": 161.67588806152344,
-          "clock_mae": 0.09947510063648224,
-          "elapsed_error": 0.7172379493713379,
-          "pen_tp": 0,
-          "pen_fp": 1,
-          "pen_fn": 4,
-          "premature_end": 0.0,
-          "ade_pixels": 74.34395599365234,
-          "fde_pixels": 161.67588806152344
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID elegível da categoria na validação, pelo menos62eventos.",
-        "Primeiro ID de validação com pelo menos três eventos pen-up no prefixo32."
-      ],
-      "explanations": [
-        "Compare a mesma realização humana com os dois futuros previstos. Prefixos maiores mudam também a origem da previsão.",
-        "As separações entre traços e os saltos também fazem parte da sequência."
-      ]
+      }
     },
     {
       "id": "4520875535630336",
@@ -8428,47 +8032,15 @@
       "themes": [
         "cruzamentos"
       ],
-      "selection_rule": "Primeiro ID de validação com pelo menos dois cruzamentos próprios no prefixo32.",
-      "explanation": "Cruzamentos descrevem a geometria do passado; não demonstram imunidade a sobreposição visual.",
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 2,
         "pen_up_count": 1,
         "length": 32,
         "ink_length": 533.154296875,
         "past_extent": 238.0
-      },
-      "metrics": {
-        "gru": {
-          "ade": 288.8887023925781,
-          "fde": 145.7188262939453,
-          "clock_mae": 0.15149974822998047,
-          "elapsed_error": 3.4770734310150146,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 2,
-          "premature_end": 0.0,
-          "ade_pixels": 288.8887023925781,
-          "fde_pixels": 145.7188262939453
-        },
-        "mlp": {
-          "ade": 288.8732604980469,
-          "fde": 161.64556884765625,
-          "clock_mae": 0.15703320503234863,
-          "elapsed_error": 2.851271867752075,
-          "pen_tp": 0,
-          "pen_fp": 0,
-          "pen_fn": 2,
-          "premature_end": 0.0,
-          "ade_pixels": 288.8732604980469,
-          "fde_pixels": 161.64556884765625
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID de validação com pelo menos dois cruzamentos próprios no prefixo32."
-      ],
-      "explanations": [
-        "Cruzamentos descrevem a geometria do passado; não demonstram imunidade a sobreposição visual."
-      ]
+      }
     },
     {
       "id": "4867727850209280",
@@ -9140,50 +8712,16 @@
       ],
       "default_cut": 32,
       "default_horizon": 30,
-      "themes": [
-        "continuidade"
-      ],
-      "selection_rule": "Primeiro ID de validação com ADE30 abaixo de40pixels para ambas as redes.",
-      "explanation": "Caso curado na validação para ilustrar previsões próximas; não foi escolhido no teste e não resume a distribuição de erros.",
+      "themes": [],
+      "selection_rule": "Exemplo do conjunto de validação do Quick, Draw!.",
+      "explanation": "Ajuste o trecho observado e compare a previsão da GRU com os próximos pontos reais.",
       "prefix_descriptors": {
         "crossings": 0,
         "pen_up_count": 0,
         "length": 32,
         "ink_length": 511.2374267578125,
         "past_extent": 181.3299560546875
-      },
-      "metrics": {
-        "gru": {
-          "ade": 35.112369537353516,
-          "fde": 57.78951644897461,
-          "clock_mae": 0.13100090622901917,
-          "elapsed_error": 2.762861490249634,
-          "pen_tp": 1,
-          "pen_fp": 5,
-          "pen_fn": 5,
-          "premature_end": 0.0,
-          "ade_pixels": 35.112369537353516,
-          "fde_pixels": 57.78951644897461
-        },
-        "mlp": {
-          "ade": 39.309871673583984,
-          "fde": 70.56964874267578,
-          "clock_mae": 0.1302417814731598,
-          "elapsed_error": 2.3428127765655518,
-          "pen_tp": 1,
-          "pen_fp": 8,
-          "pen_fn": 5,
-          "premature_end": 0.0,
-          "ade_pixels": 39.309871673583984,
-          "fde_pixels": 70.56964874267578
-        }
-      },
-      "selection_rules": [
-        "Primeiro ID de validação com ADE30 abaixo de40pixels para ambas as redes."
-      ],
-      "explanations": [
-        "Caso curado na validação para ilustrar previsões próximas; não foi escolhido no teste e não resume a distribuição de erros."
-      ]
+      }
     }
   ],
   "unavailable_themes": []

@@ -2,9 +2,7 @@
 
 A comparação de reconhecimento é entre uma **GRU temporal** e uma **MLP convencional sobre imagem**, ambas classificadoras de 12 categorias. O relatório tem duas macroseções: previsão dos traços e reconhecimento da categoria. As métricas de previsão não são métricas de reconhecimento.
 
-## Por que substituir Deep Sets
-
-O encoder Deep Sets existente aplica uma MLP por evento e agrega a média. Foi escolhido para estudar a agregação sem ordem, mantendo o decoder de previsão. É uma arquitetura para conjuntos, não a MLP convencional solicitada. Seus atributos e seu decoder ainda continham informação temporal local. A invariância da agregação, portanto, não demonstrava ausência de toda informação temporal.
+## Por que usar pixels na MLP
 
 Uma MLP sobre pontos concatenados também não remove a ordem: cada posição do vetor representa um instante. Para realmente remover a ordem de execução da entrada, renderizamos os traços numa imagem binária e achatamos seus pixels.
 
@@ -27,4 +25,4 @@ Trocar a ordem de traços inteiros conserva a imagem binária e a previsão da M
 
 Ambas as redes podem reconhecer antes do fim. A hipótese é que façam isso em momentos e com erros diferentes. Cruzamentos não garantem vantagem da GRU. Pausas e pen-up são informação disponível, não garantia de interpretação perfeita. Invariância a translação e escala vem da normalização explícita compartilhada, não de uma propriedade automática de uma RNN.
 
-Referências: [Google Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset), [Deep Sets](https://arxiv.org/abs/1703.06114), [GRU](https://arxiv.org/abs/1406.1078).
+Referências: [Google Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset), [GRU](https://arxiv.org/abs/1406.1078).

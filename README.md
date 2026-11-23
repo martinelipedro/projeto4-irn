@@ -13,7 +13,7 @@ A rede recebe somente os traços já observados e estima a categoria do desenho 
 | GRU | Eventos ordenados: Δx, Δy, pen-up, log(1+Δt/0,1), x e y | GRU → densa → 12 classes |
 | MLP convencional | Imagem binária 32×32 achatada em 1.024 pixels | Densa → ReLU → densa → ReLU → 12 classes |
 
-A MLP de reconhecimento não usa Deep Sets, convolução, agregação de eventos, relógio ou canal de recência. A imagem preserva a geometria observada e remove a ordem em que os traços foram executados. Uma MLP sobre pontos concatenados ainda teria a ordem representada pelas posições do vetor e responderia a outra pergunta.
+A MLP de reconhecimento aplica camadas densas aos pixels do prefixo. A imagem preserva a geometria observada e remove a ordem em que os traços foram executados. Uma MLP sobre pontos concatenados ainda teria a ordem representada pelas posições do vetor e responderia a outra pergunta.
 
 Ambas as redes podem reconhecer antes do fim. A GRU dispõe de movimentos, intervalos e levantamentos da caneta; isso não garante melhor resultado em todo prefixo nem imunidade a rabiscos. As duas apresentações usam a caixa do próprio prefixo para normalizar posição e escala. Como essa normalização muda com o prefixo, reexecutamos a GRU sobre todos os eventos disponíveis a cada atualização.
 
@@ -80,7 +80,7 @@ O comando usa um novo diretório de resultados e requer PyTorch com CUDA. O estu
 
 ## Previsão: próximos pontos t+k
 
-A previsão de trajetória está disponível em `site/forecast/`, separada do reconhecimento. Nela a categoria é fornecida e o horizonte é de 5, 15 ou 30 eventos futuros. Seu comparador é **Deep Sets**, identificado como tal: não é a MLP convencional do estudo principal. ADE/FDE desse experimento não são métricas de reconhecimento. Seus dados, treinos, fontes e resultados permanecem em `results/drawing_forecast_compare_v1/`; o relatório único tem uma macroseção completa para cada tarefa.
+A GRU prevê os próximos 5, 15 ou 30 eventos da caneta em `site/forecast/`. Ela recebe os movimentos observados e a categoria fornecida. O relatório apresenta o ajuste da GRU, as curvas de aprendizagem e os erros de trajetória. Os pesos, dados e históricos estão em `results/drawing_forecast_compare_v1/`.
 
 A galeria de previsão contém seis casos positivos de validação, dois por horizonte (5, 15, 30), com passado, futuro real, futuro previsto, zoom e curvas X/Y. A escolha usa critérios espaciais e de caneta, seguida de revisão visual. Os exemplos são selecionados deliberadamente; as métricas agregadas de teste continuam completas. Artefatos e regras: `results/drawing_forecast_compare_v1/successful_examples/`.
 
@@ -92,7 +92,7 @@ A galeria de previsão contém seis casos positivos de validação, dois por hor
 | `configs/recognition*.json` | Configuração de referência e reprodução do zero |
 | `results/drawing_recognition_compare_v2/` | Históricos, checkpoints, seleções, previsões, métricas, diagnósticos e figuras |
 | `site/` | Reconhecimento interativo e modelos reais no navegador |
-| `site/forecast/` | Demonstração de previsão, com GRU e Deep Sets |
+| `site/forecast/` | Demonstração de previsão com a GRU |
 | `tests/` e `scripts/audit_recognition.py` | Invariantes e auditoria científica dos resultados |
 
 O workflow confere as duas demonstrações antes de publicar `site/` no GitHub Pages. O treinamento não ocorre no deploy.

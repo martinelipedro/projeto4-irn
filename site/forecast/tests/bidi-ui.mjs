@@ -18,11 +18,12 @@ try{
   await call('browsingContext.setViewport',{context,viewport:{width:1440,height:1100}});
   await call('browsingContext.navigate',{context,url,wait:'complete'});await ready();
   await evaluate('window.__forecastDemo.stop()');
-  assert.equal(await evaluate("document.getElementById('modelStatus').textContent.includes('Dois modelos prontos')"),true);
+  assert.equal(await evaluate("document.getElementById('modelStatus').textContent.includes('GRU pronta')"),true);
   assert.equal(await evaluate('window.__forecastDemo.state.result.models.gru.points.length'),15);
-  assert.equal(await evaluate('window.__forecastDemo.state.result.models.mlp.points.length'),15);
+  assert.equal(await evaluate('Object.keys(window.__forecastDemo.state.result.models).join()'),'gru');
+  assert.equal(await evaluate("document.querySelectorAll('.canvas-card').length"),2);
   assert.ok((await evaluate("document.getElementById('gruADE').textContent")).includes('px'));
-  assert.ok((await evaluate("document.getElementById('mlpADE').textContent")).includes('px'));
+  assert.ok((await evaluate("document.getElementById('gruFDE').textContent")).includes('px'));
   const reportCases=JSON.parse(await evaluate(`JSON.stringify(window.__forecastDemo.state.examples
     .map((e,index)=>({index,report_case:e.report_case,cut:e.default_cut,k:e.default_horizon,ade:e.ade_gru}))
     .filter(e=>e.report_case))`));
@@ -55,7 +56,7 @@ try{
   const original=JSON.parse(await evaluate('JSON.stringify(window.__forecastDemo.state.result.models)'));
   await evaluate("document.getElementById('translation').value='1';document.getElementById('translation').dispatchEvent(new Event('change'))");await ready();
   const shifted=JSON.parse(await evaluate('JSON.stringify(window.__forecastDemo.state.result.models)'));
-  for(const model of ['gru','mlp']){
+  for(const model of ['gru']){
     assert.ok(Math.abs(shifted[model].metrics.ade-original[model].metrics.ade)<.02,model+' mudou demais sob translação.');
     for(let i=0;i<30;i++)assert.ok(Math.abs(shifted[model].points[i][0]-original[model].points[i][0]-120)<.03);
   }
@@ -63,10 +64,8 @@ try{
   await evaluate("document.getElementById('scale').value='1.25';document.getElementById('scale').dispatchEvent(new Event('change'))");await ready();
   assert.equal(await evaluate('window.__forecastDemo.state.result.perturb.scale'),1.25);
   await evaluate("window.__forecastDemo.resetPerturbations();");await ready();
-  const mlp=JSON.parse(await evaluate('JSON.stringify(window.__forecastDemo.state.result.models.mlp.points)'));
   await evaluate("document.getElementById('shuffle').checked=true;document.getElementById('shuffle').dispatchEvent(new Event('change'))");await ready();
-  const shuffled=JSON.parse(await evaluate('JSON.stringify(window.__forecastDemo.state.result.models.mlp.points)'));
-  for(let i=0;i<30;i++)for(const j of [0,1])assert.ok(Math.abs(mlp[i][j]-shuffled[i][j])<1e-5,'DeepSets deveria preservar o pooling na permutação.');
+  assert.equal(await evaluate('window.__forecastDemo.state.result.perturb.shuffle'),true);
   await evaluate("document.getElementById('ignorePen').checked=true;document.getElementById('ignorePen').dispatchEvent(new Event('change'))");await ready();
   assert.equal(await evaluate('window.__forecastDemo.state.result.perturb.ignorePen'),true);
   await evaluate('window.__forecastDemo.resetPerturbations()');await ready();
@@ -89,6 +88,6 @@ try{
   assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true,'Layout móvel excedeu a largura.');
   await screenshot('/tmp/projeto4-forecast-mobile.png');
   const errors=logs.filter(l=>l.level==='error'&&l.source?.context===context);assert.equal(errors.length,0,JSON.stringify(errors));
-  console.log(JSON.stringify({passed:true,url,browser:'Firefox BiDi',checks:['inferência dos dois modelos','prefixo16/32','horizonte5/30','passo exato','pausa e ritmo lento','futuro real não altera previsão','translação','escala','permutação DeepSets','pen-up','categoria fornecida','desenho por mouse','sem métricas sem verdade','desfazer','390px sem overflow'],gru_pixels:pixels}));
+  console.log(JSON.stringify({passed:true,report_cases_ui_verified:6,url,browser:'Firefox BiDi',checks:['inferência somente com GRU','prefixo16/32','horizonte5/30','passo exato','pausa e ritmo lento','futuro real não altera previsão','translação','escala','permutação do contexto','pen-up','categoria fornecida','desenho por mouse','sem métricas sem verdade','desfazer','390px sem overflow'],gru_pixels:pixels}));
 }catch(error){try{console.log(await evaluate("JSON.stringify({status:document.getElementById('modelStatus').textContent,note:document.getElementById('predictionNote').textContent,ready:window.__forecastDemo?.ready})"));await screenshot('/tmp/projeto4-forecast-failure.png');}catch{}throw error;}
 finally{try{await call('session.end',{});}catch{}ws.close();}

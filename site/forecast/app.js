@@ -1,7 +1,7 @@
 import {prepareForecastPoints} from './forecast.js';
 
 const $=id=>document.getElementById(id);
-const colors={ink:'#223342',gru:'#d5684c',mlp:'#806aab',truth:'#418e83',muted:'#97a5ac'};
+const colors={ink:'#223342',gru:'#d5684c',truth:'#418e83',muted:'#97a5ac'};
 const state={ready:false,modelReady:false,dataReady:false,examples:[],labels:[],classes:[],mode:'example',exampleIndex:0,prefix:16,horizon:15,label:0,
   result:null,reveal:0,playing:false,processing:false,job:0,points:[],strokes:[],theme:'prefixo',startedAt:0};
 let timer=null,predictTimer=null,activePointer=null;
@@ -61,7 +61,7 @@ function requestPrediction({autoplay=false}={}){
   clearTimeout(predictTimer);if(!state.ready)return;
   const points=basePast();if(points.length<8){$('predictionNote').textContent='Acrescente mais movimentos: o previsor precisa de pelo menos oito pontos.';return;}
   stopPlayback();state.processing=true;state.job++;state.pendingAutoplay=autoplay;state.result=null;state.reveal=0;
-  $('predictionNote').textContent='As duas redes estão processando o mesmo passado…';
+  $('predictionNote').textContent='A GRU está processando os movimentos observados…';
   worker.postMessage({type:'predict',job:state.job,points,label:state.label,horizon:state.horizon,example:state.mode==='example',
     truth:state.mode==='example'?currentExample().points.slice(state.prefix,state.prefix+state.horizon):[],perturb:perturbation()});
   render();
@@ -83,21 +83,21 @@ worker.onmessage=event=>{
     state.processing=false;state.result=message;state.reveal=0;
     const more=message.contextCount<basePast().length?` Contexto efetivo: ${message.contextCount} eventos amostrados.`:'';
     $('predictionNote').textContent=`Uma hipótese para os próximos ${state.horizon} pontos, com a categoria “${state.labels[state.label]}” fornecida.${more}`;
-    $('contextNote').textContent=selectedCondition()?'Entrada alterada: este é um teste exploratório de sensibilidade, fora do protocolo principal.':'Os modelos recebem apenas os pontos até t. O futuro real serve à comparação.';
+    $('contextNote').textContent=selectedCondition()?'Entrada alterada: este é um teste exploratório de sensibilidade, fora do protocolo principal.':'A GRU recebe os pontos até t. O futuro real serve para conferir a continuação.';
     render();if(state.pendingAutoplay)startPlayback();
   }else if(message.type==='error'){
     if(message.job!=null&&message.job!==state.job)return;
     state.processing=false;
-    if(message.job==null){$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível carregar os modelos. Recarregue a página.';console.error(message.message);}
+    if(message.job==null){$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível carregar a GRU. Recarregue a página.';console.error(message.message);}
     else $('predictionNote').textContent=message.message;
     render();
   }
 };
-worker.onerror=event=>{state.processing=false;$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível iniciar os modelos. Recarregue a página.';console.error(event.message);controls();};
+worker.onerror=event=>{state.processing=false;$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível iniciar a GRU. Recarregue a página.';console.error(event.message);controls();};
 
 function checkReady(){
   state.ready=state.modelReady&&state.dataReady;if(!state.ready)return;
-  $('modelStatus').className='status ready';$('modelStatus').innerHTML='<i></i> Dois modelos prontos · processamento local';
+  $('modelStatus').className='status ready';$('modelStatus').innerHTML='<i></i> GRU pronta · processamento local';
   $('exampleSelect').disabled=false;loadExample(0);
 }
 
@@ -124,10 +124,10 @@ function stroke(ctx,points,projection,color,width=4.5,alpha=1){
 
 function drawBoards(){
   const result=state.result,past=result?.past??basePast();
-  const trueFuture=result?.truth??[],gru=result?.models.gru.points??[],mlp=result?.models.mlp.points??[];
+  const trueFuture=result?.truth??[],gru=result?.models.gru.points??[];
   const original=basePast();const transformed=perturbation().translation[0]!==0||perturbation().scale!==1;
-  const projection=project(past,[...trueFuture,...gru,...mlp,...(transformed?original:[])]);
-  const worlds={inputCanvas:state.mode==='draw'?{x:0,y:0,span:256}:projection,gruCanvas:projection,mlpCanvas:projection};
+  const projection=project(past,[...trueFuture,...gru,...(transformed?original:[])]);
+  const worlds={inputCanvas:state.mode==='draw'?{x:0,y:0,span:256}:projection,gruCanvas:projection};
   for(const [id,world] of Object.entries(worlds)){
     const ctx=$(id).getContext('2d');ctx.clearRect(0,0,600,600);
     if(id!=='inputCanvas'&&transformed)stroke(ctx,original,world,'#C3CBC9',3,.4);
@@ -135,14 +135,14 @@ function drawBoards(){
     if(id==='inputCanvas'&&!past.length){ctx.fillStyle='#93A19F';ctx.font='23px sans-serif';ctx.textAlign='center';ctx.fillText(state.mode==='draw'?'Desenhe seu começo aqui':'Preparando um exemplo…',300,295);}
     if(id==='inputCanvas'||!result)continue;
     if($('showTruth').checked&&state.mode==='example')stroke(ctx,[past.at(-1),...trueFuture],world,colors.truth,3.3,.55);
-    const key=id==='gruCanvas'?'gru':'mlp',model=result.models[key],visible=model.points.slice(0,state.reveal);
-    stroke(ctx,[past.at(-1),...visible],world,colors[key],5.5);
+    const model=result.models.gru,visible=model.points.slice(0,state.reveal);
+    stroke(ctx,[past.at(-1),...visible],world,colors.gru,5.5);
     const latest=visible.at(-1);
-    if(latest&&!model.ended[state.reveal-1]){ctx.beginPath();ctx.arc((latest[0]-world.x)/world.span*600,(latest[1]-world.y)/world.span*600,5,0,Math.PI*2);ctx.fillStyle=colors[key];ctx.fill();}
+    if(latest&&!model.ended[state.reveal-1]){ctx.beginPath();ctx.arc((latest[0]-world.x)/world.span*600,(latest[1]-world.y)/world.span*600,5,0,Math.PI*2);ctx.fillStyle=colors.gru;ctx.fill();}
   }
   const count=state.mode==='example'?state.prefix:prepareForecastPoints(state.points).length;
   $('observedCount').textContent=`t = ${count}`;$('observedTime').textContent=past.length?format(past.at(-1)[3],2)+' s':'—';
-  for(const model of ['gru','mlp'])$(model+'Time').textContent=result&&state.reveal?format(result.models[model].points[state.reveal-1][3],2)+' s previstos':'—';
+  $('gruTime').textContent=result&&state.reveal?format(result.models.gru.points[state.reveal-1][3],2)+' s previstos':'—';
 }
 
 function drawCurve(id,axis){
@@ -150,10 +150,10 @@ function drawCurve(id,axis){
   const result=state.result,past=result?.past??basePast(),window=past.slice(-9),start=-(window.length-1),future=result?.truth??[];
   const series=[{points:window.map((p,i)=>[start+i,p[axis]]),color:colors.ink,width:4}];
   if(result){
-    for(const key of ['gru','mlp'])series.push({points:[[0,past.at(-1)[axis]],...result.models[key].points.slice(0,state.reveal).map((p,i)=>[i+1,p[axis]])],color:colors[key],width:4});
+    series.push({points:[[0,past.at(-1)[axis]],...result.models.gru.points.slice(0,state.reveal).map((p,i)=>[i+1,p[axis]])],color:colors.gru,width:4});
     if($('showTruth').checked&&state.mode==='example')series.push({points:[[0,past.at(-1)[axis]],...future.map((p,i)=>[i+1,p[axis]])],color:colors.truth,width:3});
   }
-  const ys=[...past.slice(-9),...(result?.truth??[]),...(result?.models.gru.points??[]),...(result?.models.mlp.points??[])].map(p=>p[axis]);
+  const ys=[...past.slice(-9),...(result?.truth??[]),...(result?.models.gru.points??[])].map(p=>p[axis]);
   let low=ys.length?Math.min(...ys):0,high=ys.length?Math.max(...ys):256;const margin=Math.max(10,(high-low)*.13);low-=margin;high+=margin;
   const box={left:90,right:968,top:50,bottom:278},xMax=state.horizon;
   const x=v=>box.left+(v-Math.min(-8,start))/(xMax-Math.min(-8,start))*(box.right-box.left),y=v=>box.bottom-(v-low)/(high-low)*(box.bottom-box.top);
@@ -167,12 +167,13 @@ function drawCurve(id,axis){
 
 function render(){
   controls();drawBoards();drawCurve('curveX',0);drawCurve('curveY',1);
-  for(const model of ['gru','mlp'])for(const [suffix,key] of [['ADE','ade'],['FDE','fde']])$(model+suffix).textContent=px(state.result?.models[model].metrics?.[key]);
+  $('gruADE').textContent=px(state.result?.models.gru.metrics?.ade);
+  $('gruFDE').textContent=px(state.result?.models.gru.metrics?.fde);
   $('metricNote').textContent=state.mode==='draw'?'Sem futuro real conhecido: seu desenho não tem erro de previsão mensurável.':selectedCondition()?'Cenário alterado: distâncias ao futuro original transformado são exploratórias.':'Erros do horizonte completo, sobre os mesmos pontos reais. Menor é melhor.';
 }
 
 const themeCopy={
-  prefixo:['O que os modelos fazem com mais contexto?','Use 8, 16, 32 e 64 para mudar o passado observado. O horizonte k conta pontos futuros. Uma continuação pode melhorar ou piorar quando novos movimentos aparecem.'],
+  prefixo:['Como a GRU responde a mais contexto?','Use 8, 16, 32 e 64 para mudar o passado observado. O horizonte k conta pontos futuros. Uma continuação pode melhorar ou piorar quando novos movimentos aparecem.'],
   cruzamentos:['O caminho importa quando as linhas se cruzam?','O exemplo contém cruzamentos no passado. Compare a continuação e os estados da caneta: ler uma sequência não garante separar perfeitamente as partes do desenho.'],
   ordem:['A ordem do contexto antigo muda a hipótese?','A permutação altera a ordem de vetores já codificados, preserva o início e os últimos movimentos necessários ao referencial. É uma entrada artificial para testar sensibilidade, não outro desenho humano.'],
   translacao_escala:['Mover e ampliar são duas coisas diferentes.','A translação desaparece nas posições relativas e nos deslocamentos. Já ampliar muda Δx, Δy e as posições: usar movimento não dá invariância automática à escala.'],
@@ -245,7 +246,7 @@ async function loadAssets(){
 
 function renderStudy(study){
   const rows=study.horizons??[];
-  if(rows.length)$('studyRows').replaceChildren(...rows.map(r=>{const tr=document.createElement('tr');for(const value of [r.k+' pontos',px(r.gru_ade),px(r.mlp_ade)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}return tr;}));
+  if(rows.length)$('studyRows').replaceChildren(...rows.map(r=>{const tr=document.createElement('tr');for(const value of [r.k+' pontos',px(r.ade),px(r.fde)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}return tr;}));
   if(study.note)$('studyNote').textContent=study.note;
 }
 

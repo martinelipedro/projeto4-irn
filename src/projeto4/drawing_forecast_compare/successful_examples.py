@@ -29,7 +29,7 @@ def search(directory=None):
     config = read_json(directory/'config.json'); metadata = read_json(directory/'data/metadata.json')
     output = directory/'successful_examples'; output.mkdir(exist_ok=True)
     torch.set_num_threads(4)
-    models = load_models(config, directory, seed=42)
+    models = load_models(config, directory, seed=42, families=('gru',))
     validation = [r for r in load(directory) if r['split']=='validation']
     candidates = []; counts = {str(k): 0 for k in HORIZONS}; accepted = dict(counts)
     for cut in [16, 32, 64]:
@@ -130,10 +130,11 @@ def make_pages(source,report_output):
     folder=source/'successful_examples'
     selected=read_json(folder/'selected_cases.json')
     review=read_json(folder/'candidate_review.json')
-    assert selected['review_checkpoint_sha256']==review['checkpoint_sha256']
-    for family,digest in selected['review_checkpoint_sha256'].items():
-        spec=read_json(source/'models'/family/'selection.json')['best']['spec']
-        assert sha(source/'models'/family/'runs'/f'{spec["id"]}_seed42'/'best.pt')==digest
+    digest=selected['review_checkpoint_sha256']['gru']
+    assert digest==review['checkpoint_sha256']['gru']
+    gru_dir=source/'models/gru'
+    spec=read_json(gru_dir/'selection.json')['best']['spec']
+    assert sha(gru_dir/'runs'/f'{spec["id"]}_seed42'/'best.pt')==digest
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':9,
                          'axes.spines.top':False,'axes.spines.right':False})
     pages=[]

@@ -102,9 +102,9 @@ def artifact_records(directory,rows,metadata,seed=42):
     return records,predictions
 
 
-def load_models(config,directory,seed=42):
+def load_models(config,directory,seed=42,*,families=MODELS):
     models={}
-    for family in MODELS:
+    for family in families:
         folder=directory/'models'/family;selection=read_json(folder/'selection.json')
         if selection.get('test_used_for_selection',False):raise ValueError('Seleção declarou uso de teste.')
         chosen=selection['best'];spec=chosen['spec'];checkpoint=torch.load(folder/'runs'/f"{spec['id']}_seed{seed}"/'best.pt',map_location='cpu',weights_only=True)

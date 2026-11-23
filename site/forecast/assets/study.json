@@ -2,19 +2,19 @@
   "horizons": [
     {
       "k": 5,
-      "gru_ade": 44.66955046719729,
-      "mlp_ade": 49.958581571359396
+      "ade": 44.66955046719729,
+      "fde": 71.3124397994717
     },
     {
       "k": 15,
-      "gru_ade": 94.83349431438971,
-      "mlp_ade": 110.46617669703359
+      "ade": 94.83349431438971,
+      "fde": 149.23399683643254
     },
     {
       "k": 30,
-      "gru_ade": 138.56615272253137,
-      "mlp_ade": 161.1860982774929
+      "ade": 138.56615272253137,
+      "fde": 196.46537663883797
     }
   ],
-  "note": "ADE em pixels, médias de três inicializações (42/43/44), nos mesmos prefixos de teste e com categoria fornecida. A demonstração no navegador usa os pesos da seed 42. O teste já havia sido observado em estudos anteriores; não representa validação externa inédita."
+  "note": "Médias das seeds 42, 43 e 44 no teste. O navegador executa os pesos da seed 42."
 }

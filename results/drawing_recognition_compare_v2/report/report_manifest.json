@@ -6,15 +6,14 @@
   ],
   "forecast_success_cases": 6,
   "forecast_gallery_only_successes": true,
-  "figures": 39,
+  "figures": 37,
   "recognition_figures": 29,
   "gallery_cases": 13,
   "gallery_snapshots": 65,
   "sections": 23,
   "models": {
     "forecast": [
-      "GRU",
-      "Deep Sets"
+      "GRU"
     ],
     "recognition": [
       "GRU",
