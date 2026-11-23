@@ -1,8 +1,10 @@
 {
   "task": "recognition_primary_forecast_secondary",
-  "figures": 17,
-  "recognition_figures": 16,
-  "sections": 16,
+  "figures": 30,
+  "recognition_figures": 29,
+  "gallery_cases": 13,
+  "gallery_snapshots": 65,
+  "sections": 17,
   "models": [
     "GRU",
     "conventional image MLP"

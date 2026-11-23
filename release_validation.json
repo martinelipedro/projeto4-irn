@@ -69,14 +69,40 @@
   },
   "report": {
     "task": "recognition_primary_forecast_secondary",
-    "figures": 17,
-    "recognition_figures": 16,
-    "sections": 16,
+    "figures": 30,
+    "recognition_figures": 29,
+    "gallery_cases": 13,
+    "gallery_snapshots": 65,
+    "sections": 17,
     "models": [
       "GRU",
       "conventional image MLP"
     ],
-    "test_previously_observed": true
+    "test_previously_observed": true,
+    "pages": 30
   },
-  "pdf_sha256": "f04c8e24bd946b77044ecfdbadd54002ced5b403ba867c406883d76f1621662b"
+  "pdf_sha256": "8e6b81638f8ba5c7e901ce916bb0eba78c3b0f82b9311cada744a7c8b0e34b72",
+  "gallery": {
+    "passed": true,
+    "cases": 13,
+    "snapshots": 65,
+    "categories": 12,
+    "split": "validation",
+    "seed": 42,
+    "trained_new_weights": false,
+    "checkpoint_sha256": {
+      "gru": "3900f6bc3d994e1f7b3952bdad201c3fe1118e23b8f5208fe2461d4fed7647a2",
+      "mlp": "14fdf6d5b8e6affb459f832160385007a7b8f40fa0310ca50a7ec04fdbf76d67"
+    },
+    "all_12_probabilities_saved": true,
+    "display_frame_not_model_normalization": true,
+    "user_screenshot_reconstructed": false,
+    "source_ids_and_coordinates_checked": true,
+    "all_snapshot_probabilities_recomputed": true,
+    "maximum_probability_error": {
+      "gru": 1.1920928955078125e-07,
+      "mlp": 2.384185791015625e-07
+    },
+    "fish_selection_rebuilt_from_validation": true
+  }
 }

@@ -44,6 +44,8 @@ A busca e o checkpoint usam somente a validação desta comparação. O teste j�
 
 O relatório reúne curvas de aprendizagem e reconhecimento, acurácia/F1/top-3, qualidade probabilística, confusões por categoria, intervalos pareados e controles de ordem, pausas, cruzamentos e normalização. [Detalhamento do protocolo](docs/RECONHECIMENTO.md).
 
+A galeria visual reúne **13 casos e 65 etapas**, com desenho parcial, raster da MLP, top-3 das duas redes, probabilidade da classe verdadeira e curvas. Cobre as 12 categorias e inclui acertos exclusivos de cada rede. O relato do peixe desenhado livremente pelo autor é identificado como registro da captura, separado dos exemplos de validação reproduzíveis.
+
 ## Executar e verificar
 
 ```bash

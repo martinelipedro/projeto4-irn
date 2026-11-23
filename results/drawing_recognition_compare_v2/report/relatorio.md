@@ -285,6 +285,121 @@ A normalização geométrica explícita remove translação e escala positiva un
 
 Desenhos reais de validação e probabilidade atribuída à categoria verdadeira à medida que os eventos chegam. A figura mostra o desenho completo apenas para orientar o leitor; cada ponto da curva é calculado com o prefixo correspondente. Os exemplos são escolhidos por regras determinísticas registradas, incluindo diferenças favoráveis a cada rede; não estimam a média do teste.
 
+## Galeria progressiva: desenhos e hipóteses, passo a passo
+
+As pranchas seguintes mostram o desenho sendo revelado em cinco etapas: aproximadamente 10%, 25%, 50%, 75% e 100% dos eventos. Cada coluna contém o prefixo real, sua imagem binária, as três categorias mais prováveis de cada rede e P(alvo), a probabilidade da categoria verdadeira, mesmo quando ela não aparece no top-3. O número de eventos e o tempo observado identificam cada corte; os percentuais pedidos são arredondados para eventos inteiros. A curva inferior resume a evolução da probabilidade do alvo com mais cortes intermediários. Todos os desenhos dessas pranchas são da validação e todos os valores são recalculados com os pesos efetivos da seed 42, sem receber pontos futuros. Há exemplos das 12 categorias, incluindo contrastes favoráveis a cada rede, com ID e regra de escolha explícitos. Os casos selecionados não substituem as métricas agregadas do teste. A forma cresce por acréscimo de eventos; não ampliamos artificialmente o desenho para sugerir ganho de informação. O peixe mostrado na captura enviada durante o uso do site foi desenhado livremente pelo autor: eram 27 eventos, 6,4 s observados e um traço. Os valores exibidos, transcritos abaixo e arredondados pela interface, registram um erro concreto da MLP. Como a sequência original desse desenho não foi salva, não inventamos sua evolução nem recalculamos suas probabilidades. O peixe que abre a galeria é outro desenho, identificado no conjunto de validação, escolhido para ilustrar a mesma confusão Peixe/Cachorro; ele não é uma reconstrução da captura.
+
+**Registro da captura do desenho livre: hipóteses exibidas pelo site**
+
+| Rede | Primeira hipótese | Segunda hipótese | Terceira hipótese |
+|---|---|---|---|
+| GRU | Peixe (97,5%) | Tubarão (1,8%) | Cachorro (0,7%) |
+| MLP comum | Cachorro (33,9%) | Peixe (17,4%) | Tubarão (14,5%) |
+
+### Caso 1 — Peixe — confusão com cachorro
+
+Validação · ID 5421316351983616 · 69 eventos no desenho completo. Validação: desenhos Peixe com GRU correta e MLP prevendo Cachorro ao final; maior diferença P_MLP(Cachorro)-P_MLP(Peixe). Caso extremo ilustrativo; não é o desenho da captura do usuário.
+
+![Categoria real: Peixe. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_01_5421316351983616.png)
+
+Categoria real: Peixe. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 2 — Peixe
+
+Validação · ID 4969748238434304 · 78 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Peixe. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_02_4969748238434304.png)
+
+Categoria real: Peixe. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 3 — Gato
+
+Validação · ID 6406115845734400 · 91 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Gato. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_03_6406115845734400.png)
+
+Categoria real: Gato. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 4 — Flor — contraste favorável à GRU
+
+Validação · ID 6342047466258432 · 87 eventos no desenho completo. Caso extremo ilustrativo de validação: acerto exclusivo quando disponível e maior diferença de probabilidade da classe verdadeira em 50% favorece GRU. Não representa a média do teste.
+
+![Categoria real: Flor. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_04_6342047466258432.png)
+
+Categoria real: Flor. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 5 — Casa
+
+Validação · ID 6570343638499328 · 32 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Casa. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_05_6570343638499328.png)
+
+Categoria real: Casa. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 6 — Árvore
+
+Validação · ID 6712752468918272 · 57 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Árvore. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_06_6712752468918272.png)
+
+Categoria real: Árvore. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 7 — Guarda-chuva
+
+Validação · ID 6511453274112000 · 54 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Guarda-chuva. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_07_6511453274112000.png)
+
+Categoria real: Guarda-chuva. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 8 — Cachorro
+
+Validação · ID 5379841614413824 · 136 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Cachorro. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_08_5379841614413824.png)
+
+Categoria real: Cachorro. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 9 — Tubarão
+
+Validação · ID 5997514052337664 · 65 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Tubarão. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_09_5997514052337664.png)
+
+Categoria real: Tubarão. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 10 — Castelo — contraste favorável à MLP
+
+Validação · ID 6437062829932544 · 115 eventos no desenho completo. Caso extremo ilustrativo de validação: acerto exclusivo quando disponível e maior diferença de probabilidade da classe verdadeira em 50% favorece MLP. Não representa a média do teste.
+
+![Categoria real: Castelo. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_10_6437062829932544.png)
+
+Categoria real: Castelo. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 11 — Cacto
+
+Validação · ID 4745025218936832 · 147 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Cacto. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_11_4745025218936832.png)
+
+Categoria real: Cacto. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 12 — Carro — contraste favorável à MLP
+
+Validação · ID 6141759400706048 · 85 eventos no desenho completo. Caso extremo ilustrativo de validação: acerto exclusivo quando disponível e maior diferença de probabilidade da classe verdadeira em 50% favorece MLP. Não representa a média do teste.
+
+![Categoria real: Carro. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_12_6141759400706048.png)
+
+Categoria real: Carro. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
+### Caso 13 — Bicicleta
+
+Validação · ID 4917230317862912 · 93 eventos no desenho completo. Um por categoria: mediana da confiança média no prefixo de 50%, entre acertos completos de ambas quando disponíveis; somente validação.
+
+![Categoria real: Bicicleta. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.](../figures/gallery_13_4917230317862912.png)
+
+Categoria real: Bicicleta. Cada coluna usa somente o prefixo indicado. Top-3 e P(alvo) são probabilidades da seed 42; laranja no desenho destaca os eventos acrescentados desde a coluna anterior. O enquadramento é fixo apenas na ilustração; a entrada de cada rede é normalizada usando somente seu próprio prefixo.
+
 ## Software interativo e reprodutibilidade
 
 O laboratório principal executa os dois classificadores no navegador, com pesos exportados da seed 42, e permite acompanhar exemplos reais ou desenhar livremente. A interface apresenta as hipóteses top-3, a imagem reduzida vista pela MLP e as probabilidades à medida que os eventos são revelados. O ritmo lento controla somente a reprodução visual; não inventa timestamps de treino. Em desenho livre não há rótulo verdadeiro disponível e, portanto, a interface não pode calcular acurácia individual. O repositório inclui configurações, partições preparadas, pesos, históricos, métricas e fontes deste relatório. O cache das duas apresentações pode ser reconstruído a partir dos dados preparados compartilhados. A busca utiliza PyTorch em CUDA, com determinismo habilitado, TF32 desligado e parâmetros de ambiente registrados; os diagnósticos e o PDF podem ser gerados em CPU. Reproduzir o protocolo em outro hardware não garante igualdade bit a bit. A exportação deve ser verificada por referências numéricas Python/JavaScript antes da publicação. A demonstração é uma ferramenta para inspecionar diferenças, não uma prova selecionada para confirmar que uma rede sempre ganha. Uma MLP sobre a sequência concatenada ou uma CNN sobre a imagem seriam controles adicionais pertinentes; não foram confundidos com o comparador efetivamente treinado aqui.

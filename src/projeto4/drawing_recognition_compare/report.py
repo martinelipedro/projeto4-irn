@@ -14,6 +14,7 @@ import numpy as np
 
 from ..io import ROOT, read_json, write_json
 from .data import represent, permute_strokes
+from .gallery import make_gallery
 
 NAMES = {'gru': 'GRU', 'mlp': 'MLP de imagem'}
 COLORS = {'gru': '#087F8C', 'mlp': '#D96646'}
@@ -308,6 +309,8 @@ Introdução às Redes Neurais Artificiais\\Pedro Martineli (RA: 193474)
     md='# '+title+'\n\n'+abstract+'\n\n'
     for section in sections:
         heading=section['title'];text=section['text'];level=section.get('level',1)
+        if section.get('start_on_new_page'):
+            tex+='\\clearpage\n'
         tex+='\\'+('section' if level==1 else 'subsection')+'{'+escape(heading)+'}\n'+escape(text)+'\n'
         md+='#'*(level+1)+' '+heading+'\n\n'+text+'\n\n'
         for equation in section.get('equations',[]):
@@ -333,6 +336,13 @@ Introdução às Redes Neurais Artificiais\\Pedro Martineli (RA: 193474)
                 if target_png.resolve()!=png.resolve():shutil.copy2(png,target_png)
                 relative='../figures/'+target_png.name
             md+='!['+caption+']('+relative+')\n\n'+caption+'\n\n'
+        for page in section.get('pages', []):
+            tex+='\\clearpage\n\\subsection*{'+escape(page['title'])+'}\n'+escape(page['text'])+'\n'
+            path=Path(page['figure']);relative='../figures/'+path.name
+            tex+='\\begin{figure}[H]\\centering\\includegraphics[width=\\linewidth,height=.75\\textheight,keepaspectratio]{'+relative+'}\\caption{'+escape(page['caption'])+'}\\end{figure}\n'
+            md+='### '+page['title']+'\n\n'+page['text']+'\n\n!['+page['caption']+'](../figures/'+path.with_suffix('.png').name+')\n\n'+page['caption']+'\n\n'
+        if section.get('pages'):
+            tex+='\\clearpage\n'
     tex+='\\section*{Referências}\\begin{enumerate}\n';md+='## Referências\n\n'
     for label,url in references:
         tex+='\\item \\href{'+url+'}{'+escape(label)+'}\n';md+=f'- [{label}]({url})\n'
@@ -357,6 +367,7 @@ def build(output=None):
     example_path=ROOT/'site/assets/recognition/examples.json'
     raw=read_json(example_path);examples=raw['examples'] if isinstance(raw,dict) else raw
     figures=make_figures(output,config,manifest,selections,metrics,diagnostics,examples)
+    gallery_pages=make_gallery(output,examples,manifest['labels'])
     def fs(*names):return [figures[n] for n in names if n in figures]
     screen=[];finals=[];architectures=[]
     for family in NAMES:
@@ -488,6 +499,19 @@ def build(output=None):
                 'O repositório inclui configurações, partições preparadas, pesos, históricos, métricas e fontes deste relatório. O cache das duas apresentações pode ser reconstruído a partir dos dados preparados compartilhados. A busca utiliza PyTorch em CUDA, com determinismo habilitado, TF32 desligado e parâmetros de ambiente registrados; os diagnósticos e o PDF podem ser gerados em CPU. Reproduzir o protocolo em outro hardware não garante igualdade bit a bit. A exportação deve ser verificada por referências numéricas Python/JavaScript antes da publicação. '
                 'A demonstração é uma ferramenta para inspecionar diferenças, não uma prova selecionada para confirmar que uma rede sempre ganha. Uma MLP sobre a sequência concatenada ou uma CNN sobre a imagem seriam controles adicionais pertinentes; não foram confundidos com o comparador efetivamente treinado aqui.'},
     ]
+    gallery_section={
+        'title':'Galeria progressiva: desenhos e hipóteses, passo a passo',
+        'start_on_new_page':True,
+        'text':'As pranchas seguintes mostram o desenho sendo revelado em cinco etapas: aproximadamente 10%, 25%, 50%, 75% e 100% dos eventos. Cada coluna contém o prefixo real, sua imagem binária, as três categorias mais prováveis de cada rede e P(alvo), a probabilidade da categoria verdadeira, mesmo quando ela não aparece no top-3. O número de eventos e o tempo observado identificam cada corte; os percentuais pedidos são arredondados para eventos inteiros. A curva inferior resume a evolução da probabilidade do alvo com mais cortes intermediários. '
+               'Todos os desenhos dessas pranchas são da validação e todos os valores são recalculados com os pesos efetivos da seed 42, sem receber pontos futuros. Há exemplos das 12 categorias, incluindo contrastes favoráveis a cada rede, com ID e regra de escolha explícitos. Os casos selecionados não substituem as métricas agregadas do teste. A forma cresce por acréscimo de eventos; não ampliamos artificialmente o desenho para sugerir ganho de informação. '
+               'O peixe mostrado na captura enviada durante o uso do site foi desenhado livremente pelo autor: eram 27 eventos, 6,4 s observados e um traço. Os valores exibidos, transcritos abaixo e arredondados pela interface, registram um erro concreto da MLP. Como a sequência original desse desenho não foi salva, não inventamos sua evolução nem recalculamos suas probabilidades. O peixe que abre a galeria é outro desenho, identificado no conjunto de validação, escolhido para ilustrar a mesma confusão Peixe/Cachorro; ele não é uma reconstrução da captura.',
+        'tables':[('Registro da captura do desenho livre: hipóteses exibidas pelo site',
+                   ['Rede','Primeira hipótese','Segunda hipótese','Terceira hipótese'],
+                   [['GRU','Peixe (97,5%)','Tubarão (1,8%)','Cachorro (0,7%)'],
+                    ['MLP comum','Cachorro (33,9%)','Peixe (17,4%)','Tubarão (14,5%)']])],
+        'pages':gallery_pages}
+    insert_at=next(i for i,s in enumerate(sections) if s['title']=='Software interativo e reprodutibilidade')
+    sections.insert(insert_at,gallery_section)
     forecast=ROOT/'results/drawing_forecast_compare_v1'
     if (forecast/'models/gru/test_metrics.json').exists():
         forecast_metrics={f:read_json(forecast/'models'/f/'test_metrics.json') for f in NAMES}
@@ -514,7 +538,7 @@ def build(output=None):
                 ('Zaheer et al. (2017) — Deep Sets (apenas comparador do estudo secundário)', 'https://arxiv.org/abs/1703.06114'),
                 ('Código, configurações e resultados do projeto', 'https://github.com/martinelipedro/projeto4-irn')]
     render(output,abstract,sections,references)
-    write_json(output/'report/report_manifest.json',{'task':'recognition_primary_forecast_secondary','figures':sum(len(s.get('figures',[])) for s in sections),'recognition_figures':len(figures),'sections':len(sections),'models':['GRU','conventional image MLP'],'test_previously_observed':True})
+    write_json(output/'report/report_manifest.json',{'task':'recognition_primary_forecast_secondary','figures':sum(len(s.get('figures',[]))+len(s.get('pages',[])) for s in sections),'recognition_figures':len(figures)+len(gallery_pages),'gallery_cases':len(gallery_pages),'gallery_snapshots':5*len(gallery_pages),'sections':len(sections),'models':['GRU','conventional image MLP'],'test_previously_observed':True})
     print('Relatório gerado:',output/'report/relatorio.pdf',flush=True)
 
 
