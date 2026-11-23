@@ -421,6 +421,23 @@ def build(output=None):
             ['Previsão t+k','Movimentos e categoria','Próximos pontos da caneta'],
             ['Reconhecimento','Movimentos ou imagem parcial','Probabilidades das 12 categorias']])],
     }
+    metrics_guide = [
+        {'title':'Como medimos os resultados', 'unnumbered':True, 'start_on_new_page':True,
+         'text':'Na previsão, medimos a distância entre os pontos previstos e os pontos registrados. No reconhecimento, contamos quantas categorias as redes acertam.'},
+        {'title':'Previsão — ADE e FDE', 'level':2, 'unnumbered':True,
+         'text':'Para cada passo futuro, comparamos o ponto previsto com o ponto registrado no mesmo passo. Calculamos a distância em linha reta, em pixels, a partir das diferenças em X e Y. ADE (Average Displacement Error) é a média dessas distâncias ao longo dos k passos. FDE (Final Displacement Error) usa apenas a distância no último passo. Menor é melhor nas duas métricas.\n\n'
+                'Exemplo com cinco passos. Se as distâncias são 2, 4, 4, 5 e 10 pixels, o ADE é (2 + 4 + 4 + 5 + 10) / 5 = 5 pixels e o FDE é 10 pixels. Nesse caso, o ponto final ficou mais distante do que a média do trajeto.',
+         'equations':[
+             r'd_j=\sqrt{(\widehat{x}_{t+j}-x_{t+j})^2+(\widehat{y}_{t+j}-y_{t+j})^2},\qquad'
+             r'\mathrm{ADE}_k=\frac{1}{k}\sum_{j=1}^{k}d_j,\qquad\mathrm{FDE}_k=d_k.',
+         ]},
+        {'title':'Reconhecimento — acurácia', 'level':2, 'unnumbered':True,
+         'text':'Para cada desenho, usamos como palpite a categoria com maior probabilidade. Se ela coincide com a categoria correta, contamos um acerto. A acurácia é a porcentagem de desenhos acertados. Calculamos essa porcentagem separadamente com 25%, 50%, 75% e 100% dos eventos disponíveis. As duas redes recebem o mesmo trecho em cada corte.\n\n'
+                'Exemplo com dez desenhos pela metade. Se o primeiro palpite da rede acerta a categoria em oito deles, a acurácia nesse corte é 8 / 10 = 80%.',
+         'equations':[r'\text{Acurácia (\%)}=100\,\frac{\text{número de desenhos acertados}}{\text{número de desenhos avaliados}}.']},
+        {'title':'De onde vêm os valores do relatório?', 'level':2, 'unnumbered':True,
+         'text':'Na tabela de previsão, calculamos ADE e FDE em cada janela elegível de teste e fazemos a média das janelas para aquele horizonte. No gráfico de reconhecimento, contamos os acertos nos 3.000 desenhos de teste em cada corte. Por fim, fazemos a média dos resultados das três inicializações em cada tarefa.'},
+    ]
     forecast = forecast_sections(ROOT/'results/drawing_forecast_compare_v1',output)
     recognition = [
         {'macro_title':'Reconhecimento da categoria do desenho',
@@ -431,8 +448,7 @@ def build(output=None):
          'figures':[(figures['02_aprendizagem'][0], 'Curvas de treino e validação das duas redes. As estrelas marcam as épocas escolhidas com base na validação.')]},
         {'title':'Acurácia conforme o desenho aparece',
          'start_on_new_page':True,
-         'text':'Acurácia é a porcentagem de desenhos em que a categoria com maior probabilidade está correta. O gráfico compara as duas redes nos mesmos 3.000 desenhos de teste. Cada ponto mostra a média de três inicializações.\n\n'
-                f'Com metade do desenho, a GRU acertou {pct(half_gru)} e a MLP acertou {pct(half_mlp)}. Com o desenho completo, os resultados foram {pct(full_gru)} e {pct(full_mlp)}, respectivamente. Nos quatro cortes avaliados, a GRU teve maior acurácia. As redes usam arquiteturas e representações diferentes, então a comparação mede o efeito dessas escolhas em conjunto.\n\n'
+         'text':f'Com metade do desenho, a GRU acertou {pct(half_gru)} e a MLP acertou {pct(half_mlp)}. Com o desenho completo, os resultados foram {pct(full_gru)} e {pct(full_mlp)}, respectivamente. Nos quatro cortes avaliados, a GRU teve maior acurácia. As redes usam arquiteturas e representações diferentes, então a comparação mede o efeito dessas escolhas em conjunto.\n\n'
                 'As próximas páginas mostram quatro desenhos de validação com resultados diferentes. No peixe desenhado livremente no site, a GRU atribuiu 97,5% a Peixe e o palpite principal da MLP foi Cachorro (33,9%). O peixe mostrado a seguir é outro desenho, de validação, com uma confusão semelhante.',
          'figures':[(chart,'Acurácia depois de observar 25%, 50%, 75% e 100% dos eventos.')],
          'pages':gallery_pages},
@@ -443,7 +459,7 @@ def build(output=None):
                 '5, 15 ou 30 movimentos da caneta. Para reconhecer desenhos parciais, comparamos uma GRU '
                 'que acompanha a sequência de pontos com uma MLP que recebe a imagem. Com metade do desenho, '
                 f'a acurácia foi de {pct(half_gru)} na GRU e {pct(half_mlp)} na MLP.')
-    sections = [overview]+forecast+recognition
+    sections = [overview]+metrics_guide+forecast+recognition
     references = [
         ('Google Creative Lab — Quick, Draw! Dataset e licença CC BY 4.0','https://github.com/googlecreativelab/quickdraw-dataset'),
         ('Cho et al. (2014) — artigo que apresenta a GRU','https://arxiv.org/abs/1406.1078'),
@@ -456,6 +472,7 @@ def build(output=None):
         'task':'forecast_and_recognition','edition':'presentation',
         'macro_sections':[s['macro_title'] for s in sections if 'macro_title' in s],
         'forecast_horizons':[5,15,30],'forecast_success_cases':6,'forecast_real_future_shown':False,
+        'metrics_explained':['ADE','FDE','accuracy'],
         'recognition_comparison_metrics':['accuracy'],'recognition_cases_in_pdf':len(gallery_pages),
         'gallery_cases':len(full_gallery),'gallery_snapshots':5*len(full_gallery),
         'figures':sum(len(s.get('figures',[]))+len(s.get('pages',[])) for s in sections),

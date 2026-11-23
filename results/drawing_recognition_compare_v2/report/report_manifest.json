@@ -12,6 +12,11 @@
   ],
   "forecast_success_cases": 6,
   "forecast_real_future_shown": false,
+  "metrics_explained": [
+    "ADE",
+    "FDE",
+    "accuracy"
+  ],
   "recognition_comparison_metrics": [
     "accuracy"
   ],

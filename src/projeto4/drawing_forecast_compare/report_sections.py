@@ -90,7 +90,7 @@ def build_sections(source, output):
                  f'A validação selecionou {chosen["hidden"]} unidades ocultas e taxa {number(chosen["lr"],3)}. Os resultados do teste usam a média de três inicializações.'},
         {'title': 'Aprendizagem e erro de previsão',
          'start_on_new_page': True,
-         'text': 'ADE mede a distância média entre os pontos previstos e os registrados ao longo da janela futura. FDE mede a distância no último ponto. Quanto menores esses erros, mais próximo o traço ficou do desenho registrado. O erro cresce com o número de eventos previstos. Os resultados abaixo incluem todas as janelas elegíveis do teste para cada horizonte.',
+         'text': 'Na tabela, o ADE e o FDE aumentam conforme a GRU prevê mais eventos. Os valores são médias de três inicializações e incluem todas as janelas elegíveis do teste para cada horizonte.',
          'tables': [('Resultados da GRU no teste', ['Horizonte k', 'ADE (pixels)', 'FDE (pixels)'], rows)],
          'figures': [(learning, 'As estrelas marcam as épocas escolhidas na validação para cada inicialização.')],
          'pages': [

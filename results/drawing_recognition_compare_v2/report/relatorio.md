@@ -17,6 +17,34 @@ O teste usa as mesmas partições dos estudos anteriores do projeto. O recorte c
 | Previsão t+k | Movimentos e categoria | Próximos pontos da caneta |
 | Reconhecimento | Movimentos ou imagem parcial | Probabilidades das 12 categorias |
 
+## Como medimos os resultados
+
+Na previsão, medimos a distância entre os pontos previstos e os pontos registrados. No reconhecimento, contamos quantas categorias as redes acertam.
+
+### Previsão — ADE e FDE
+
+Para cada passo futuro, comparamos o ponto previsto com o ponto registrado no mesmo passo. Calculamos a distância em linha reta, em pixels, a partir das diferenças em X e Y. ADE (Average Displacement Error) é a média dessas distâncias ao longo dos k passos. FDE (Final Displacement Error) usa apenas a distância no último passo. Menor é melhor nas duas métricas.
+
+Exemplo com cinco passos. Se as distâncias são 2, 4, 4, 5 e 10 pixels, o ADE é (2 + 4 + 4 + 5 + 10) / 5 = 5 pixels e o FDE é 10 pixels. Nesse caso, o ponto final ficou mais distante do que a média do trajeto.
+
+$$
+d_j=\sqrt{(\widehat{x}_{t+j}-x_{t+j})^2+(\widehat{y}_{t+j}-y_{t+j})^2},\qquad\mathrm{ADE}_k=\frac{1}{k}\sum_{j=1}^{k}d_j,\qquad\mathrm{FDE}_k=d_k.
+$$
+
+### Reconhecimento — acurácia
+
+Para cada desenho, usamos como palpite a categoria com maior probabilidade. Se ela coincide com a categoria correta, contamos um acerto. A acurácia é a porcentagem de desenhos acertados. Calculamos essa porcentagem separadamente com 25%, 50%, 75% e 100% dos eventos disponíveis. As duas redes recebem o mesmo trecho em cada corte.
+
+Exemplo com dez desenhos pela metade. Se o primeiro palpite da rede acerta a categoria em oito deles, a acurácia nesse corte é 8 / 10 = 80%.
+
+$$
+\text{Acurácia (\%)}=100\,\frac{\text{número de desenhos acertados}}{\text{número de desenhos avaliados}}.
+$$
+
+### De onde vêm os valores do relatório?
+
+Na tabela de previsão, calculamos ADE e FDE em cada janela elegível de teste e fazemos a média das janelas para aquele horizonte. No gráfico de reconhecimento, contamos os acertos nos 3.000 desenhos de teste em cada corte. Por fim, fazemos a média dos resultados das três inicializações em cada tarefa.
+
 ## Previsão dos próximos traços (t+k)
 
 ### O que a GRU prevê
@@ -29,7 +57,7 @@ Testamos 128 e 192 unidades ocultas e taxas de aprendizagem de 0,001 e 0,0005. T
 
 ### Aprendizagem e erro de previsão
 
-ADE mede a distância média entre os pontos previstos e os registrados ao longo da janela futura. FDE mede a distância no último ponto. Quanto menores esses erros, mais próximo o traço ficou do desenho registrado. O erro cresce com o número de eventos previstos. Os resultados abaixo incluem todas as janelas elegíveis do teste para cada horizonte.
+Na tabela, o ADE e o FDE aumentam conforme a GRU prevê mais eventos. Os valores são médias de três inicializações e incluem todas as janelas elegíveis do teste para cada horizonte.
 
 **Resultados da GRU no teste**
 
@@ -79,8 +107,6 @@ Para cada rede, testamos duas larguras e taxas iniciais de 0,001 e 0,003. Os tre
 Curvas de treino e validação das duas redes. As estrelas marcam as épocas escolhidas com base na validação.
 
 ### Acurácia conforme o desenho aparece
-
-Acurácia é a porcentagem de desenhos em que a categoria com maior probabilidade está correta. O gráfico compara as duas redes nos mesmos 3.000 desenhos de teste. Cada ponto mostra a média de três inicializações.
 
 Com metade do desenho, a GRU acertou 82,9% e a MLP acertou 69,8%. Com o desenho completo, os resultados foram 93,0% e 83,7%, respectivamente. Nos quatro cortes avaliados, a GRU teve maior acurácia. As redes usam arquiteturas e representações diferentes, então a comparação mede o efeito dessas escolhas em conjunto.
 

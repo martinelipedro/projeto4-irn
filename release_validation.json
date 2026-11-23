@@ -81,6 +81,11 @@
     ],
     "forecast_success_cases": 6,
     "forecast_real_future_shown": false,
+    "metrics_explained": [
+      "ADE",
+      "FDE",
+      "accuracy"
+    ],
     "recognition_comparison_metrics": [
       "accuracy"
     ],
@@ -98,15 +103,16 @@
       ]
     },
     "test_previously_observed": true,
-    "pages": 12,
+    "pages": 13,
     "opening_overview_page": 1,
+    "metrics_page": 2,
     "forecast_gallery_pages": [
-      4,
-      5
+      5,
+      6
     ],
-    "recognition_starts_on_page": 6
+    "recognition_starts_on_page": 7
   },
-  "pdf_sha256": "4ef0267b142b9d62754af7a3234371c5e13d4d7b419fa2743cc345f4ffb69906",
+  "pdf_sha256": "88449b410670b3de75a945d93d54754548fb1eddb63d45c80a532162ab34dd4a",
   "gallery": {
     "passed": true,
     "cases": 13,
