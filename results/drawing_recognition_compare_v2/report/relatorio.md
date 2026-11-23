@@ -94,6 +94,12 @@ A configuração selecionada tem 192 unidades ocultas, taxa de 0,001 e limiar de
 | 192 | 0,0010 | 0,3802 | 0,3800 |
 | 192 | 0,0005 | 0,4055 | — |
 
+#### Arquitetura final e épocas da previsão
+
+Os 6 atributos de cada evento e os 16 valores da categoria entram em uma camada GRU com 192 unidades. Uma camada densa gera 64 escores para escolher a trajetória-base. O estado final da GRU e o vetor de 24 valores do modo escolhido alimentam o decodificador denso 216 → 128 (tanh) → 180. As 180 saídas são 30 grupos de 6 ajustes para posição, caneta e tempo.
+
+Foram 20 épocas por inicialização. Os checkpoints escolhidos na validação ficaram nas épocas 18, 20, 20, na ordem das seeds 42, 43 e 44.
+
 ### Aprendizagem e erro de previsão
 
 Na tabela, o ADE e o FDE aumentam conforme a GRU prevê mais eventos. Os valores são médias de três inicializações e incluem todas as janelas elegíveis do teste para cada horizonte.
@@ -152,6 +158,12 @@ A GRU escolhida tem 192 unidades e taxa de 0,003. A MLP escolhida tem 256 e 128 
 | MLP de imagem | 128 | 0,001 | 0,94818 | — |
 | MLP de imagem | 256 | 0,003 | 0,84914 | 0,84845 |
 | MLP de imagem | 256 | 0,001 | 0,85127 | 0,84841 |
+
+#### Arquiteturas finais e épocas do reconhecimento
+
+A GRU lê 6 atributos por evento com uma camada de 192 unidades. O estado do último evento válido alimenta uma camada densa de 12 saídas. A MLP recebe 1.024 pixels e usa a sequência 1.024 → 256 → 128 → 12, com ReLU nas camadas ocultas. As duas redes usam dropout de 0,1 no treino e softmax para obter as 12 probabilidades.
+
+Foram 32 épocas por rede e inicialização. Nas seeds 42, 43 e 44, os checkpoints selecionados foram das épocas 26, 26, 28 para a GRU e 32, 31, 31 para a MLP.
 
 ### Como as redes aprenderam
 

@@ -92,6 +92,9 @@ def build_sections(source, output):
     fish_page['caption'] = ('A linha escura mostra os 16 eventos observados. A linha verde-azulada mostra a continuação da GRU para os 30 eventos seguintes. As curvas detalham as coordenadas X e Y.')
     rows = [[k, number(metrics[str(k)]['ade_pixels']), number(metrics[str(k)]['fde_pixels'])] for k in [5, 15, 30]]
     learning = learning_figure(gru, output, chosen['id'])
+    checkpoint_epochs = [read_json(gru/'runs'/f'{chosen["id"]}_seed{seed}'/'summary.json')['best_epoch']
+                         for seed in (42, 43, 44)]
+    checkpoints = ', '.join(map(str, checkpoint_epochs))
     return [
         {'macro_title': 'Previsão dos próximos traços (t+k)',
          'title': 'Como continuar um desenho em andamento?',
@@ -102,6 +105,9 @@ def build_sections(source, output):
                 f'A configuração selecionada tem {chosen["hidden"]} unidades ocultas, taxa de {number(chosen["lr"],3)} e limiar de {number(winner["pen_threshold"],1)}. A inicialização 44 entra na média final do teste, depois da seleção.',
          'tables':[('Busca da GRU na validação. Menor escore é melhor. A média é calculada para os finalistas.',
                     ['Unidades','Taxa inicial','Escore 42','Média 42 e 43'],search_rows)]},
+        {'title': 'Arquitetura final e épocas da previsão', 'level': 2,
+         'text': f'Os 6 atributos de cada evento e os 16 valores da categoria entram em uma camada GRU com {chosen["hidden"]} unidades. Uma camada densa gera {chosen["n_modes"]} escores para escolher a trajetória-base. O estado final da GRU e o vetor de 24 valores do modo escolhido alimentam o decodificador denso 216 → 128 (tanh) → 180. As 180 saídas são 30 grupos de 6 ajustes para posição, caneta e tempo.\n\n'
+                 f'Foram {chosen["epochs"]} épocas por inicialização. Os checkpoints escolhidos na validação ficaram nas épocas {checkpoints}, na ordem das seeds 42, 43 e 44.'},
         {'title': 'Aprendizagem e erro de previsão',
          'start_on_new_page': True,
          'text': 'Na tabela, o ADE e o FDE aumentam conforme a GRU prevê mais eventos. Os valores são médias de três inicializações e incluem todas as janelas elegíveis do teste para cada horizonte.',

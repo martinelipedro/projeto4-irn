@@ -115,7 +115,7 @@
     "recognition_hyperparameters_page": 8,
     "dataset_and_inputs_page": 2
   },
-  "pdf_sha256": "6edde9749e91b3ed4221c1ea3f9ab576dff0c025c57291a1afcd78b1559f59af",
+  "pdf_sha256": "2cd27113cb9e534118e54d4a266a28428250b1460694ad9141ec2d7ad1e275b4",
   "gallery": {
     "passed": true,
     "cases": 13,

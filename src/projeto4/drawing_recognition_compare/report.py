@@ -419,6 +419,11 @@ def build(output=None):
                                 num(mean,5) if mean is not None else '—'])
     gru_width, gru_rate = (selections['gru']['best']['spec'][k] for k in ['hidden','lr'])
     mlp_width, mlp_rate = (selections['mlp']['best']['spec'][k] for k in ['hidden','lr'])
+    recognition_checkpoints = {
+        family: ', '.join(str(read_json(run_directory(output, family, selection, seed)/'summary.json')['best_epoch'])
+                          for seed in (42, 43, 44))
+        for family, selection in selections.items()
+    }
     chart = accuracy_figure(output,metrics)
     half_gru,half_mlp = (metrics[f]['mean']['0.5']['accuracy'] for f in NAMES)
     full_gru,full_mlp = (metrics[f]['mean']['1.0']['accuracy'] for f in NAMES)
@@ -478,6 +483,9 @@ def build(output=None):
                 f'A GRU escolhida tem {gru_width} unidades e taxa de {num(gru_rate,3)}. A MLP escolhida tem {mlp_width} e {mlp_width//2} unidades ocultas e taxa de {num(mlp_rate,3)}. As duas taxas finalistas da MLP ficaram muito próximas. A inicialização 44 entra na média do teste.',
          'tables':[('Busca da GRU e da MLP na validação. Menor perda é melhor. A média é calculada para os finalistas.',
                     ['Rede','Largura','Taxa inicial','Perda 42','Média 42 e 43'],search_rows)]},
+        {'title':'Arquiteturas finais e épocas do reconhecimento','level':2,
+         'text':f'A GRU lê 6 atributos por evento com uma camada de {gru_width} unidades. O estado do último evento válido alimenta uma camada densa de 12 saídas. A MLP recebe 1.024 pixels e usa a sequência 1.024 → {mlp_width} → {mlp_width//2} → 12, com ReLU nas camadas ocultas. As duas redes usam dropout de 0,1 no treino e softmax para obter as 12 probabilidades.\n\n'
+                f'Foram {config["epochs"]} épocas por rede e inicialização. Nas seeds 42, 43 e 44, os checkpoints selecionados foram das épocas {recognition_checkpoints["gru"]} para a GRU e {recognition_checkpoints["mlp"]} para a MLP.'},
         {'title':'Como as redes aprenderam','start_on_new_page':True,
          'text':'Para cada configuração escolhida, usamos os pesos da época com menor perda de validação. As curvas mostram como a perda evoluiu ao longo das épocas nas três inicializações.',
          'figures':[(figures['02_aprendizagem'][0], 'Curvas de treino e validação das duas redes. As estrelas marcam as épocas escolhidas com base na validação.')]},
