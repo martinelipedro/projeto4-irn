@@ -1,7 +1,7 @@
 {
   "passed": true,
   "report_cases_ui_verified": 6,
-  "url": "http://127.0.0.1:8879/forecast/",
+  "url": "http://127.0.0.1:8880/forecast/",
   "browser": "Firefox BiDi",
   "checks": [
     "inferência somente com GRU",
@@ -9,7 +9,7 @@
     "horizonte5/30",
     "passo exato",
     "pausa e ritmo lento",
-    "futuro real não altera previsão",
+    "futuro exibido somente pela GRU",
     "translação",
     "escala",
     "permutação do contexto",
@@ -20,5 +20,5 @@
     "desfazer",
     "390px sem overflow"
   ],
-  "gru_pixels": 1705
+  "gru_pixels": 1777
 }

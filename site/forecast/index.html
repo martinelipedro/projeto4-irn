@@ -2,14 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f2ed"><meta name="description" content="Acompanhe os próximos movimentos da caneta previstos por uma GRU e compare com os traços reais.">
+  <meta name="theme-color" content="#f4f2ed"><meta name="description" content="Acompanhe os próximos movimentos da caneta previstos pela GRU.">
   <title>O próximo traço · GRU em movimento</title>
   <link rel="icon" type="image/svg+xml" href="icon.svg"><link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar wrap"><a class="brand" href="#"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 28c8-24 16-19 13-3S31 36 35 9"/></svg><span>O próximo traço<span class="brand-sub">um experimento com séries temporais</span></span></a><nav aria-label="Navegação"><a href="../">Reconhecimento</a><a href="#laboratorio">Laboratório</a><a href="#experimentos">O que testar</a><a class="report-link" href="../relatorio.pdf" target="_blank" rel="noopener">Ler o relatório <span aria-hidden="true">↗</span></a></nav></header>
   <main>
-    <section class="hero wrap"><div><p class="eyebrow">PROJETO 4 / REDES NEURAIS</p><h1>O desenho ainda não acabou.<br><em>O que vem depois?</em></h1><p class="hero-copy">Dê alguns movimentos à <strong>GRU</strong> e acompanhe os próximos pontos que ela prevê. Nos exemplos do relatório, você pode sobrepor os traços reais à continuação prevista.</p></div><div class="hero-note"><svg viewBox="0 0 180 110" aria-hidden="true"><path class="seen" d="M16 82c14-54 53-56 67-8s49 27 53-28"/><path class="guess" d="M136 46c3-26 23-28 30-7"/><circle cx="136" cy="46" r="5"/><path class="tick" d="m151 15 3-8m13 15 8-3m-8 19 8 4"/></svg><span>passado observado <i></i> futuro previsto</span></div></section>
+    <section class="hero wrap"><div><p class="eyebrow">PROJETO 4 / REDES NEURAIS</p><h1>O desenho ainda não acabou.<br><em>O que vem depois?</em></h1><p class="hero-copy">Dê alguns movimentos à <strong>GRU</strong> e acompanhe os próximos pontos que ela prevê. Escolha um dos seis casos do relatório e avance ponto a ponto.</p></div><div class="hero-note"><svg viewBox="0 0 180 110" aria-hidden="true"><path class="seen" d="M16 82c14-54 53-56 67-8s49 27 53-28"/><path class="guess" d="M136 46c3-26 23-28 30-7"/><circle cx="136" cy="46" r="5"/><path class="tick" d="m151 15 3-8m13 15 8-3m-8 19 8 4"/></svg><span>passado observado <i></i> futuro previsto</span></div></section>
 
     <section class="lab wrap" id="laboratorio" aria-labelledby="lab-title">
       <div class="section-heading"><div><p class="eyebrow">01 / EXPERIMENTE</p><h2 id="lab-title">Do traço observado à previsão</h2></div><span class="status" id="modelStatus" role="status"><i></i> Carregando a GRU…</span></div>
@@ -22,8 +22,7 @@
           <label for="horizon">Quantos pontos prever?</label><select id="horizon"><option value="5">k = 5 · futuro próximo</option><option value="15" selected>k = 15 · um pouco adiante</option><option value="30">k = 30 · horizonte maior</option></select>
           <button class="primary" id="predict" disabled>Prever próximos pontos <span aria-hidden="true">↗</span></button>
           <div class="draw-tools" id="drawTools" hidden><button id="undo">↶ Desfazer traço</button><button id="clear">Limpar ×</button><p class="field-note">Desenhe no primeiro quadro. Soltar a caneta encerra um traço. Precisamos de pelo menos 8 pontos amostrados.</p></div>
-          <label class="check" id="truthControl"><input type="checkbox" id="showTruth" checked><span>Mostrar o futuro real</span></label>
-          <p class="context-note" id="contextNote">A GRU recebe os pontos até t. O futuro real serve para conferir a continuação.</p>
+          <p class="context-note" id="contextNote">A GRU recebe os pontos até t e desenha os próximos k pontos previstos.</p>
         </aside>
         <div class="workbench">
           <div class="comparison">
@@ -33,7 +32,7 @@
           <div class="playback"><div class="play-buttons"><button id="play" disabled aria-label="Reproduzir previsão">▶ Reproduzir</button><button id="step" disabled>+1 ponto</button><button id="all" disabled>Mostrar tudo</button></div><div class="play-progress"><span id="playValue">t + 0 / 15</span><input id="reveal" type="range" min="0" max="15" value="0" disabled aria-label="Pontos futuros revelados"></div><label class="speed-label">Ritmo <select id="speed" aria-label="Velocidade da reprodução"><option value="600">Lento</option><option value="300" selected>Médio</option><option value="120">Rápido</option></select></label></div>
           <div class="outcome"><p id="predictionNote" role="status">Escolha um exemplo e observe uma hipótese de futuro, ponto a ponto.</p><p class="muted" id="exampleNote"></p></div>
           <div class="metric-strip" aria-label="Erros neste exemplo"><div><span>GRU · ADE</span><strong id="gruADE">—</strong></div><div><span>GRU · FDE</span><strong id="gruFDE">—</strong></div><p id="metricNote">Erros em pixels sobre o mesmo futuro real. Menor é melhor.</p></div>
-          <details class="curve-details" open><summary>Ver a série temporal por trás do desenho <span>coordenadas X e Y</span></summary><div class="curves"><canvas id="curveX" width="1000" height="340" aria-label="Coordenada X real e prevista ao longo dos eventos"></canvas><canvas id="curveY" width="1000" height="340" aria-label="Coordenada Y real e prevista ao longo dos eventos"></canvas></div><div class="legend"><span><i class="dot ink"></i>Passado</span><span><i class="dot teal"></i>Futuro real</span><span><i class="dot coral"></i>GRU</span></div></details>
+          <details class="curve-details" open><summary>Ver a série temporal por trás do desenho <span>coordenadas X e Y</span></summary><div class="curves"><canvas id="curveX" width="1000" height="340" aria-label="Coordenada X observada e prevista ao longo dos eventos"></canvas><canvas id="curveY" width="1000" height="340" aria-label="Coordenada Y observada e prevista ao longo dos eventos"></canvas></div><div class="legend"><span><i class="dot ink"></i>Passado</span><span><i class="dot coral"></i>GRU</span></div></details>
         </div>
       </div>
     </section>

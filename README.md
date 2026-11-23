@@ -42,9 +42,9 @@ A busca e o checkpoint usam somente a validação desta comparação. O teste j�
 - Triagem de quatro candidatos por família na seed 42; dois finalistas repetidos com 43; escolha pela média da entropia cruzada de validação. Seed 44 apenas replica a configuração escolhida. As duas famílias são congeladas antes do teste.
 - Todos os classificadores são inicializados do zero. Um piloto de 16 épocas foi interrompido por subajuste observado na validação; seus pesos não inicializam os modelos principais.
 
-O relatório está organizado em duas macroseções: previsão dos traços e categorização do desenho. Reúne curvas de aprendizagem e reconhecimento, acurácia/F1/top-3, qualidade probabilística, confusões por categoria, intervalos pareados e controles de ordem, pausas, cruzamentos e normalização. [Detalhamento do protocolo](docs/RECONHECIMENTO.md).
+O relatório de apresentação tem duas partes. A previsão mostra o erro da GRU por horizonte. O reconhecimento resume a comparação pela acurácia ao longo do desenho. As demais métricas e análises estão em `results/drawing_recognition_compare_v2/`. [Detalhamento do protocolo](docs/RECONHECIMENTO.md).
 
-A galeria visual reúne **13 casos e 65 etapas**, com desenho parcial, raster da MLP, top-3 das duas redes, probabilidade da classe verdadeira e curvas. Cobre as 12 categorias e inclui acertos exclusivos de cada rede. O relato do peixe desenhado livremente pelo autor é identificado como registro da captura, separado dos exemplos de validação reproduzíveis.
+A galeria completa nos artefatos reúne **13 casos e 65 etapas**, com desenho parcial, raster da MLP, top-3 das duas redes, probabilidade da classe verdadeira e curvas. Cobre as 12 categorias e inclui acertos exclusivos de cada rede. O relato do peixe desenhado livremente pelo autor é identificado como registro da captura, separado dos exemplos de validação reproduzíveis.
 
 ## Executar e verificar
 
@@ -82,7 +82,7 @@ O comando usa um novo diretório de resultados e requer PyTorch com CUDA. O estu
 
 A GRU prevê os próximos 5, 15 ou 30 eventos da caneta em `site/forecast/`. Ela recebe os movimentos observados e a categoria fornecida. O relatório apresenta o ajuste da GRU, as curvas de aprendizagem e os erros de trajetória. Os pesos, dados e históricos estão em `results/drawing_forecast_compare_v1/`.
 
-A galeria de previsão contém seis casos positivos de validação, dois por horizonte (5, 15, 30), com passado, futuro real, futuro previsto, zoom e curvas X/Y. A escolha usa critérios espaciais e de caneta, seguida de revisão visual. Os exemplos são selecionados deliberadamente; as métricas agregadas de teste continuam completas. Artefatos e regras: `results/drawing_forecast_compare_v1/successful_examples/`.
+A galeria de previsão contém seis casos positivos de validação, dois por horizonte (5, 15, 30), com passado observado e continuação da GRU. O caso do peixe também inclui as curvas X/Y. A escolha usa critérios espaciais e de caneta, seguida de revisão visual. Os exemplos são selecionados deliberadamente; as métricas agregadas de teste continuam completas. Artefatos e regras: `results/drawing_forecast_compare_v1/successful_examples/`.
 
 ## Organização
 

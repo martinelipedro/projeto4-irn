@@ -1,7 +1,7 @@
 import {prepareForecastPoints} from './forecast.js';
 
 const $=id=>document.getElementById(id);
-const colors={ink:'#223342',gru:'#d5684c',truth:'#418e83',muted:'#97a5ac'};
+const colors={ink:'#223342',gru:'#d5684c',muted:'#97a5ac'};
 const state={ready:false,modelReady:false,dataReady:false,examples:[],labels:[],classes:[],mode:'example',exampleIndex:0,prefix:16,horizon:15,label:0,
   result:null,reveal:0,playing:false,processing:false,job:0,points:[],strokes:[],theme:'prefixo',startedAt:0};
 let timer=null,predictTimer=null,activePointer=null;
@@ -22,7 +22,7 @@ function startPlayback(){
 }
 
 function controls(){
-  $('exampleControls').hidden=state.mode!=='example';$('prefixControls').hidden=state.mode!=='example';$('drawTools').hidden=state.mode!=='draw';$('truthControl').hidden=state.mode!=='example';
+  $('exampleControls').hidden=state.mode!=='example';$('prefixControls').hidden=state.mode!=='example';$('drawTools').hidden=state.mode!=='draw';
   for(const [id,mode] of [['exampleMode','example'],['drawMode','draw']]){$(id).classList.toggle('active',state.mode===mode);$(id).setAttribute('aria-pressed',String(state.mode===mode));}
   $('prefix').value=state.prefix;$('prefixValue').textContent=state.prefix+' pontos';$('horizon').value=state.horizon;$('category').value=state.label;
   const example=currentExample(),max=example?Math.min(64,example.points.length-state.horizon):64;
@@ -39,7 +39,7 @@ function invalidate(){stopPlayback();state.result=null;state.reveal=0;render();}
 function loadExample(index,{autoplay=true}={}){
   index=Math.max(0,Math.min(state.examples.length-1,Number(index)));if(!state.examples[index])return;
   state.mode='example';state.exampleIndex=index;const example=currentExample();state.label=Number(example.label);
-  if(example.report_case){state.horizon=example.default_horizon;resetPerturbations(false);$('showTruth').checked=true;}
+  if(example.report_case){state.horizon=example.default_horizon;resetPerturbations(false);}
   state.prefix=Math.max(8,Math.min(example.default_cut??16,64,example.points.length-state.horizon));
   $('exampleSelect').value=index;$('sourceTag').textContent=`Quick, Draw! · ${example.source_split==='test'?'teste':'validação'} · ID ${example.id}`;
   $('exampleNote').textContent=example.explanation??example.selection_rule??'Exemplo real definido pela regra descrita no relatório.';
@@ -83,7 +83,7 @@ worker.onmessage=event=>{
     state.processing=false;state.result=message;state.reveal=0;
     const more=message.contextCount<basePast().length?` Contexto efetivo: ${message.contextCount} eventos amostrados.`:'';
     $('predictionNote').textContent=`Uma hipótese para os próximos ${state.horizon} pontos, com a categoria “${state.labels[state.label]}” fornecida.${more}`;
-    $('contextNote').textContent=selectedCondition()?'Entrada alterada: este é um teste exploratório de sensibilidade, fora do protocolo principal.':'A GRU recebe os pontos até t. O futuro real serve para conferir a continuação.';
+    $('contextNote').textContent=selectedCondition()?'Entrada alterada: este é um teste exploratório de sensibilidade, fora do protocolo principal.':'A GRU recebe os pontos até t e desenha os próximos k pontos previstos.';
     render();if(state.pendingAutoplay)startPlayback();
   }else if(message.type==='error'){
     if(message.job!=null&&message.job!==state.job)return;
@@ -124,9 +124,9 @@ function stroke(ctx,points,projection,color,width=4.5,alpha=1){
 
 function drawBoards(){
   const result=state.result,past=result?.past??basePast();
-  const trueFuture=result?.truth??[],gru=result?.models.gru.points??[];
+  const gru=result?.models.gru.points??[];
   const original=basePast();const transformed=perturbation().translation[0]!==0||perturbation().scale!==1;
-  const projection=project(past,[...trueFuture,...gru,...(transformed?original:[])]);
+  const projection=project(past,[...gru,...(transformed?original:[])]);
   const worlds={inputCanvas:state.mode==='draw'?{x:0,y:0,span:256}:projection,gruCanvas:projection};
   for(const [id,world] of Object.entries(worlds)){
     const ctx=$(id).getContext('2d');ctx.clearRect(0,0,600,600);
@@ -134,7 +134,6 @@ function drawBoards(){
     stroke(ctx,id==='inputCanvas'&&state.mode==='draw'?state.points:past,world,colors.ink,id==='inputCanvas'?5:3.8,id==='inputCanvas'?1:.65);
     if(id==='inputCanvas'&&!past.length){ctx.fillStyle='#93A19F';ctx.font='23px sans-serif';ctx.textAlign='center';ctx.fillText(state.mode==='draw'?'Desenhe seu começo aqui':'Preparando um exemplo…',300,295);}
     if(id==='inputCanvas'||!result)continue;
-    if($('showTruth').checked&&state.mode==='example')stroke(ctx,[past.at(-1),...trueFuture],world,colors.truth,3.3,.55);
     const model=result.models.gru,visible=model.points.slice(0,state.reveal);
     stroke(ctx,[past.at(-1),...visible],world,colors.gru,5.5);
     const latest=visible.at(-1);
@@ -147,13 +146,12 @@ function drawBoards(){
 
 function drawCurve(id,axis){
   const canvas=$(id),ctx=canvas.getContext('2d'),w=1000,h=340;ctx.clearRect(0,0,w,h);
-  const result=state.result,past=result?.past??basePast(),window=past.slice(-9),start=-(window.length-1),future=result?.truth??[];
+  const result=state.result,past=result?.past??basePast(),window=past.slice(-9),start=-(window.length-1);
   const series=[{points:window.map((p,i)=>[start+i,p[axis]]),color:colors.ink,width:4}];
   if(result){
     series.push({points:[[0,past.at(-1)[axis]],...result.models.gru.points.slice(0,state.reveal).map((p,i)=>[i+1,p[axis]])],color:colors.gru,width:4});
-    if($('showTruth').checked&&state.mode==='example')series.push({points:[[0,past.at(-1)[axis]],...future.map((p,i)=>[i+1,p[axis]])],color:colors.truth,width:3});
   }
-  const ys=[...past.slice(-9),...(result?.truth??[]),...(result?.models.gru.points??[])].map(p=>p[axis]);
+  const ys=[...past.slice(-9),...(result?.models.gru.points??[])].map(p=>p[axis]);
   let low=ys.length?Math.min(...ys):0,high=ys.length?Math.max(...ys):256;const margin=Math.max(10,(high-low)*.13);low-=margin;high+=margin;
   const box={left:90,right:968,top:50,bottom:278},xMax=state.horizon;
   const x=v=>box.left+(v-Math.min(-8,start))/(xMax-Math.min(-8,start))*(box.right-box.left),y=v=>box.bottom-(v-low)/(high-low)*(box.bottom-box.top);
@@ -206,7 +204,7 @@ document.querySelectorAll('[data-cut]').forEach(b=>b.addEventListener('click',()
 $('horizon').addEventListener('change',e=>{state.horizon=Number(e.target.value);if(state.mode==='example')state.prefix=Math.min(state.prefix,currentExample().points.length-state.horizon);schedulePrediction();});
 $('predict').addEventListener('click',()=>requestPrediction({autoplay:true}));
 $('play').addEventListener('click',()=>state.playing?stopPlayback():startPlayback());$('step').addEventListener('click',()=>{stopPlayback();state.reveal=Math.min(state.horizon,state.reveal+1);render();});
-$('all').addEventListener('click',()=>{stopPlayback();state.reveal=state.horizon;render();});$('reveal').addEventListener('input',e=>{stopPlayback();state.reveal=Number(e.target.value);render();});$('showTruth').addEventListener('change',render);
+$('all').addEventListener('click',()=>{stopPlayback();state.reveal=state.horizon;render();});$('reveal').addEventListener('input',e=>{stopPlayback();state.reveal=Number(e.target.value);render();});
 $('speed').addEventListener('change',()=>{if(state.playing){stopPlayback();startPlayback();}});
 for(const id of ['scale','translation','shuffle','ignorePen'])$(id).addEventListener('change',schedulePrediction);
 $('resetExperiment').addEventListener('click',()=>resetPerturbations());document.querySelectorAll('[data-theme]').forEach(b=>b.addEventListener('click',()=>selectTheme(b.dataset.theme)));

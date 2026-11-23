@@ -34,7 +34,7 @@ function run(message){
   let time=encoded.points.at(-1)[3];
   const trajectory=prediction.tokens.map(t=>{time+=model.time_scale*Math.expm1(t[3]);return [encoded.points[0][0]+t[4]*model.position_scale,encoded.points[0][1]+t[5]*model.position_scale,t[2],time];});
   const gru={points:trajectory,ended:prediction.ended,mode:prediction.mode,metrics:metrics(trajectory,future)};
-  return {models:{gru},past:encoded.points,truth:future,contextCount:tokens.length,horizon,label,perturb};
+  return {models:{gru},past:encoded.points,contextCount:tokens.length,horizon,label,perturb};
 }
 
 self.onmessage=async event=>{

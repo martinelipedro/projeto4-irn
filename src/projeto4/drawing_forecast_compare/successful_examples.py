@@ -141,41 +141,38 @@ def make_pages(source,report_output):
     for index,case in enumerate(selected['cases'],1):
         assert case['source_split']=='validation' and not case['metrics']['gru']['premature_end']
         p=np.asarray(case['points']);cut=case['cut'];k=case['k']
-        truth=p[cut:cut+k];prediction=np.asarray(case['forecast']['gru']);last=p[cut-1]
-        extent=max(float(np.ptp(p[:cut+k,:2],axis=0).max()),1.)
-        center=(p[:cut+k,:2].min(0)+p[:cut+k,:2].max(0))/2
+        prediction=np.asarray(case['forecast']['gru']);last=p[cut-1]
+        visible=np.vstack([p[:cut,:2],prediction[:,:2]])
+        extent=max(float(np.ptp(visible,axis=0).max()),1.)
+        center=(visible.min(0)+visible.max(0))/2
         fig=plt.figure(figsize=(7.1,7.4),facecolor='white')
         grid=fig.add_gridspec(3,6,left=.10,right=.98,bottom=.08,top=.95,
                              height_ratios=[1.45,1.1,1.0],hspace=.52,wspace=.75)
-        for column,title in enumerate(['Passado observado até t','Passado + futuro real','Passado + futuro da GRU']):
-            ax=fig.add_subplot(grid[0,column*2:column*2+2])
+        for column,title in enumerate(['Passado observado até t','Passado e continuação da GRU']):
+            ax=fig.add_subplot(grid[0,column*3:column*3+3])
             plot_ink(ax,p[:cut],INK,lw=1.7)
-            if column==1:plot_ink(ax,np.vstack([last,truth]),REAL,lw=2.)
-            if column==2:plot_ink(ax,np.vstack([last,prediction]),PREDICTED,lw=2.)
+            if column==1:plot_ink(ax,np.vstack([last,prediction]),PREDICTED,lw=2.)
             ax.scatter(last[0],last[1],s=14,color=INK,zorder=3)
             ax.set(xlim=(center[0]-.6*extent,center[0]+.6*extent),
                    ylim=(center[1]+.6*extent,center[1]-.6*extent),aspect='equal')
             ax.axis('off');ax.set_title(title,fontsize=8.4,pad=9)
         ax=fig.add_subplot(grid[1,:])
-        plot_ink(ax,np.vstack([last,truth]),REAL,lw=2.5,alpha=.6)
         plot_ink(ax,np.vstack([last,prediction]),PREDICTED,lw=1.8,linestyle='--')
-        ax.scatter(truth[:,0],truth[:,1],s=7,color=REAL,zorder=3)
         ax.scatter(prediction[:,0],prediction[:,1],s=7,color=PREDICTED,zorder=3)
-        ax.set_title('Zoom no trecho t+1 até t+k: real e previsto sobrepostos',fontsize=9)
+        ax.set_title('Trajeto previsto pela GRU de t+1 até t+k',fontsize=9)
         ax.invert_yaxis();ax.set_aspect('equal',adjustable='datalim');ax.grid(alpha=.14)
         ax.tick_params(labelsize=7);ax.set_xlabel('X (pixels)',fontsize=8);ax.set_ylabel('Y (pixels)',fontsize=8)
         tail=min(8,cut-1);past=p[cut-1-tail:cut]
         for column,coordinate in enumerate([0,1]):
             ax=fig.add_subplot(grid[2,column*3:column*3+3])
             ax.plot(np.arange(-tail,1),past[:,coordinate],color=INK,label='Passado',lw=1.5)
-            ax.plot(np.arange(0,k+1),np.r_[last[coordinate],truth[:,coordinate]],color=REAL,label='Real',lw=1.8)
             ax.plot(np.arange(0,k+1),np.r_[last[coordinate],prediction[:,coordinate]],color=PREDICTED,label='GRU',lw=1.6,ls='--')
             ax.axvline(0,color='#84929A',ls=':',lw=1)
             ax.set(title=('X' if coordinate==0 else 'Y')+' ao longo dos eventos',
                    xlabel='Evento relativo a t',ylabel='Pixels')
             ax.tick_params(labelsize=7);ax.xaxis.label.set_size(8);ax.yaxis.label.set_size(8);ax.title.set_size(9)
             ax.grid(alpha=.17)
-            if column==0:ax.legend(fontsize=7,ncol=3,loc='best',columnspacing=.7,handlelength=1.3)
+            if column==0:ax.legend(fontsize=7,ncol=2,loc='best',columnspacing=.7,handlelength=1.3)
         stem=f'forecast_success_{index:02d}_{case["id"]}_k{k}'
         path=report_output/'figures'/f'{stem}.pdf'
         for ext in ['png','pdf']:fig.savefig(path.with_suffix('.'+ext),dpi=200)
@@ -186,9 +183,7 @@ def make_pages(source,report_output):
             'text':f'Categoria fornecida: {case["category"]}. A GRU observa {cut} eventos e prevê os próximos {k}. '
                    f'ADE de {number(m["ade"])} px e FDE de {number(m["fde"])} px. Validação, ID {case["id"]}, seed 42.',
             'figure':path,
-            'caption':'Caso positivo selecionado na validação e revisado visualmente. O horizonte contém somente os próximos k eventos, não o desenho inteiro. '
-                      'A curva esperada e a curva prevista usam os mesmos índices de eventos; o estado da caneta também coincide neste trecho. '
-                      'O zoom revela diferenças residuais que a visão geral pode esconder. O caso não representa o erro médio no conjunto de teste.'})
+            'caption':'A posição no último evento observado está marcada no desenho. Em verde, a continuação prevista pela GRU e suas coordenadas X/Y por evento. Caso selecionado na validação com base nos erros de posição e na sequência de levantamentos da caneta.'})
     write_json(folder/'gallery_manifest.json',{'cases':len(pages),'horizons':HORIZONS,'split':'validation',
               'seed':42,'decoder':'greedy','success_gallery_only':True,'aggregate_test_unchanged':True})
     return pages

@@ -69,17 +69,25 @@
   },
   "report": {
     "task": "forecast_and_recognition",
+    "edition": "presentation",
     "macro_sections": [
       "Previsão dos próximos traços (t+k)",
       "Reconhecimento da categoria do desenho"
     ],
+    "forecast_horizons": [
+      5,
+      15,
+      30
+    ],
     "forecast_success_cases": 6,
-    "forecast_gallery_only_successes": true,
-    "figures": 37,
-    "recognition_figures": 29,
+    "forecast_real_future_shown": false,
+    "recognition_comparison_metrics": [
+      "accuracy"
+    ],
+    "recognition_cases_in_pdf": 4,
     "gallery_cases": 13,
     "gallery_snapshots": 65,
-    "sections": 23,
+    "figures": 9,
     "models": {
       "forecast": [
         "GRU"
@@ -90,15 +98,15 @@
       ]
     },
     "test_previously_observed": true,
-    "pages": 39,
+    "pages": 12,
     "opening_overview_page": 1,
     "forecast_gallery_pages": [
-      6,
-      11
+      4,
+      5
     ],
-    "recognition_starts_on_page": 12
+    "recognition_starts_on_page": 6
   },
-  "pdf_sha256": "5d187bb5b08d73c7e74d9cfb66f6c9f3f220752967422e5f9cf2dd8e08442402",
+  "pdf_sha256": "4ef0267b142b9d62754af7a3234371c5e13d4d7b419fa2743cc345f4ffb69906",
   "gallery": {
     "passed": true,
     "cases": 13,
@@ -141,7 +149,7 @@
   "forecast_browser": {
     "passed": true,
     "report_cases_ui_verified": 6,
-    "url": "http://127.0.0.1:8879/forecast/",
+    "url": "http://127.0.0.1:8880/forecast/",
     "browser": "Firefox BiDi",
     "checks": [
       "inferência somente com GRU",
@@ -149,7 +157,7 @@
       "horizonte5/30",
       "passo exato",
       "pausa e ritmo lento",
-      "futuro real não altera previsão",
+      "futuro exibido somente pela GRU",
       "translação",
       "escala",
       "permutação do contexto",
@@ -160,6 +168,6 @@
       "desfazer",
       "390px sem overflow"
     ],
-    "gru_pixels": 1705
+    "gru_pixels": 1777
   }
 }

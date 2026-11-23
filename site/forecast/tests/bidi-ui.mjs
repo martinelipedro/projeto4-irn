@@ -48,9 +48,9 @@ try{
   await wait('window.__forecastDemo.state.reveal===1');await evaluate("document.getElementById('play').click()");
   const revealed=await evaluate('window.__forecastDemo.state.reveal');await pause(700);assert.equal(await evaluate('window.__forecastDemo.state.reveal'),revealed,'Pausa não foi respeitada.');
   await evaluate("document.getElementById('all').click()");assert.equal(await evaluate('window.__forecastDemo.state.reveal'),5);
-  const before=await evaluate('JSON.stringify(window.__forecastDemo.state.result.models)');
-  await evaluate("document.getElementById('showTruth').click()");assert.equal(await evaluate('JSON.stringify(window.__forecastDemo.state.result.models)'),before,'Mostrar/ocultar o futuro alterou as previsões.');
-  await evaluate("document.getElementById('showTruth').click();document.getElementById('horizon').value='30';document.getElementById('horizon').dispatchEvent(new Event('change'))");await ready();
+  assert.equal(await evaluate("document.getElementById('showTruth')===null"),true);
+  assert.equal(await evaluate("'truth' in window.__forecastDemo.state.result"),false);
+  await evaluate("document.getElementById('horizon').value='30';document.getElementById('horizon').dispatchEvent(new Event('change'))");await ready();
   await evaluate('window.__forecastDemo.setPrefix(32,{autoplay:false})');await ready();
   assert.equal(await evaluate('window.__forecastDemo.state.result.horizon'),30);
   const original=JSON.parse(await evaluate('JSON.stringify(window.__forecastDemo.state.result.models)'));
@@ -88,6 +88,6 @@ try{
   assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true,'Layout móvel excedeu a largura.');
   await screenshot('/tmp/projeto4-forecast-mobile.png');
   const errors=logs.filter(l=>l.level==='error'&&l.source?.context===context);assert.equal(errors.length,0,JSON.stringify(errors));
-  console.log(JSON.stringify({passed:true,report_cases_ui_verified:6,url,browser:'Firefox BiDi',checks:['inferência somente com GRU','prefixo16/32','horizonte5/30','passo exato','pausa e ritmo lento','futuro real não altera previsão','translação','escala','permutação do contexto','pen-up','categoria fornecida','desenho por mouse','sem métricas sem verdade','desfazer','390px sem overflow'],gru_pixels:pixels}));
+  console.log(JSON.stringify({passed:true,report_cases_ui_verified:6,url,browser:'Firefox BiDi',checks:['inferência somente com GRU','prefixo16/32','horizonte5/30','passo exato','pausa e ritmo lento','futuro exibido somente pela GRU','translação','escala','permutação do contexto','pen-up','categoria fornecida','desenho por mouse','sem métricas sem verdade','desfazer','390px sem overflow'],gru_pixels:pixels}));
 }catch(error){try{console.log(await evaluate("JSON.stringify({status:document.getElementById('modelStatus').textContent,note:document.getElementById('predictionNote').textContent,ready:window.__forecastDemo?.ready})"));await screenshot('/tmp/projeto4-forecast-failure.png');}catch{}throw error;}
 finally{try{await call('session.end',{});}catch{}ws.close();}
