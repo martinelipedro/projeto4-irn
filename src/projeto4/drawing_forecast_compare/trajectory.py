@@ -24,43 +24,22 @@ def to_global(local,last,direction):
     return last[:,None,:]+torch.stack([local[:,:,0]*c-local[:,:,1]*s,local[:,:,0]*s+local[:,:,1]*c],-1)
 
 
-def rasterize(prefix,size=32):
-    direction=frame(prefix);local=to_local(prefix[:,:,4:6],prefix[:,-1,4:6],direction)
-    extent=local.abs().amax((1,2)).clamp_min(.5)*1.1
-    start=local[:,:-1];end=local[:,1:];fraction=torch.linspace(0,1,64,device=prefix.device)
-    samples=start[:,:,None,:]+(end-start)[:,:,None,:]*fraction[None,None,:,None]
-    samples=samples/extent[:,None,None,None]
-    pixels=((samples+1)*(size-3)/2+1).round().long().clamp(0,size-1)
-    indexes=(pixels[:,:,:,1]*size+pixels[:,:,:,0]).reshape(len(prefix),1,-1)
-    mask=(prefix[:,:-1,2]<.5).float()[:,:,None].expand(-1,-1,64).reshape(len(prefix),1,-1)
-    recency=torch.linspace(0.1,1,prefix.shape[1]-1,device=prefix.device)[None,:,None].expand(len(prefix),-1,64).reshape(len(prefix),1,-1)
-    image=torch.zeros(len(prefix),2,size*size,device=prefix.device)
-    image[:,0:1].scatter_reduce_(2,indexes,mask,reduce='amax',include_self=True)
-    image[:,1:2].scatter_reduce_(2,indexes,mask*recency,reduce='amax',include_self=True)
-    return image.reshape(len(prefix),2,size,size),extent[:,None]
-
-
 class TrajectoryGRU(nn.Module):
-    def __init__(self,classes,anchors,hidden=192,embedding=16,mode_embedding=24,raster=False):
-        super().__init__();self.hidden=hidden;self.horizon=anchors.shape[2];self.n_modes=anchors.shape[1];self.raster=raster;self.classes=classes
+    def __init__(self,classes,anchors,hidden=192,embedding=16,mode_embedding=24):
+        super().__init__();self.hidden=hidden;self.horizon=anchors.shape[2];self.n_modes=anchors.shape[1]
         self.register_buffer('anchors',torch.as_tensor(anchors,dtype=torch.float32))
         self.embedding=nn.Embedding(classes,embedding);self.gru=nn.GRU(6+embedding,hidden,batch_first=True)
-        self.mode=nn.Linear(hidden,self.n_modes*(classes if raster else 1));self.mode_embedding=nn.Embedding(self.n_modes*(classes if raster else 1),mode_embedding)
-        if raster:
-            self.visual=nn.Sequential(nn.Conv2d(2,8,3,stride=2,padding=1),nn.ReLU(),nn.Conv2d(8,16,3,stride=2,padding=1),nn.ReLU(),nn.Conv2d(16,32,3,stride=2,padding=1),nn.ReLU(),nn.Flatten(),nn.Linear(512,128),nn.Tanh())
-            self.fusion=nn.Linear(hidden+129,hidden)
+        self.mode=nn.Linear(hidden,self.n_modes);self.mode_embedding=nn.Embedding(self.n_modes,mode_embedding)
         self.regression_hidden=nn.Linear(hidden+mode_embedding,128);self.regression=nn.Linear(128,self.horizon*6)
         nn.init.zeros_(self.regression.weight);nn.init.zeros_(self.regression.bias)
 
     def encode(self,prefix,labels):
         condition=self.embedding(labels)[:,None,:].expand(-1,prefix.shape[1],-1)
-        _,state=self.gru(torch.cat([prefix,condition],-1));h=state[0]
-        if self.raster:
-            image,extent=rasterize(prefix);h=torch.tanh(self.fusion(torch.cat([h,self.visual(image),extent],-1)))
-        return h
+        _,state=self.gru(torch.cat([prefix,condition],-1))
+        return state[0]
 
     def decode(self,h,labels,mode):
-        anchor=self.anchors[labels,mode];joined=torch.cat([h,self.mode_embedding(mode+labels*self.n_modes if self.raster else mode)],-1)
+        anchor=self.anchors[labels,mode];joined=torch.cat([h,self.mode_embedding(mode)],-1)
         residual=self.regression(torch.tanh(self.regression_hidden(joined))).reshape(-1,self.horizon,6)
         offset=.35*torch.tanh(residual[:,:,:2]);xy=anchor[:,:,:2]+offset
         pen=(anchor[:,:,2:5].clamp_min(.02)).log()+residual[:,:,2:5]
@@ -69,7 +48,6 @@ class TrajectoryGRU(nn.Module):
 
     def forward(self,prefix,labels,local_targets=None,pen_targets=None,clock_targets=None,valid=None):
         h=self.encode(prefix,labels);logits=self.mode(h)
-        if self.raster:logits=logits.reshape(-1,self.classes,self.n_modes)[torch.arange(len(prefix)),labels]
         if local_targets is None:return h,logits
         anchors=self.anchors[labels]
         # Um modo para a trajetória inteira, sem escolher um futuro diferente em cada ponto.

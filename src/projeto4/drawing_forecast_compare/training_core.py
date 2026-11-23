@@ -4,7 +4,7 @@ import time
 import numpy as np
 import torch
 from ..io import read_json,write_json,write_csv
-from .trajectory import TrajectoryGRU,targets
+from .trajectory import targets
 from .metrics import evaluate_rollouts
 from .model import new_model
 
@@ -25,12 +25,12 @@ class CPUInterface:
         out,ended=self.model.forecast(prefix.cuda(),lengths.cuda(),labels.cuda(),metadata,steps,decoder,seed)
         return out.cpu(),ended.cpu()
 
-def train_one(config,output,spec,seed,train_rows,val_rows,metadata,anchors,model_factory=None):
+def train_one(config,output,spec,seed,train_rows,val_rows,metadata,anchors):
     if spec.get('warm_start') or config.get('warm_start'):raise AssertionError('Pesos pré-treinados não são permitidos.')
     folder=output/'runs'/f"{spec['id']}_seed{seed}";folder.mkdir(parents=True,exist_ok=True)
     if (folder/'summary.json').exists():return read_json(folder/'summary.json')
     configure(config);torch.manual_seed(seed);torch.cuda.manual_seed_all(seed)
-    model=(model_factory(config,spec,anchors) if model_factory else TrajectoryGRU(len(config['classes']),anchors,spec['hidden'],config['embedding'],raster=spec.get('raster',False))).cuda()
+    model=new_model(config,spec,anchors).cuda()
     opt=torch.optim.AdamW(model.parameters(),lr=spec['lr'],weight_decay=config['weight_decay'])
     epochs=spec['epochs'];scheduler=torch.optim.lr_scheduler.CosineAnnealingLR(opt,epochs,eta_min=spec['lr']*.1)
     generator=torch.Generator().manual_seed(seed);lengths=torch.tensor([len(r['x']) for r in train_rows])
@@ -73,11 +73,11 @@ def train_one(config,output,spec,seed,train_rows,val_rows,metadata,anchors,model
         'checkpoint_criterion':'ADE/256 +0,1*encerramento prematuro, média k5/15/30,100desenhos de validação por classe.'}
     write_json(folder/'summary.json',summary);return summary
 
-def trials(config,output,spec,seed,validation,metadata,model_factory=None):
+def trials(config,output,spec,seed,validation,metadata):
     path=output/'validation_trials'/f"{spec['id']}_seed{seed}.json"
     if path.exists():return read_json(path)
     folder=output/'runs'/f"{spec['id']}_seed{seed}";saved=torch.load(folder/'best.pt',map_location='cpu',weights_only=True)
-    model=(model_factory(config,spec,None) if model_factory else new_model(config,spec)).cuda();model.load_state_dict(saved['state_dict']);model.eval();result=[]
+    model=new_model(config,spec).cuda();model.load_state_dict(saved['state_dict']);model.eval();result=[]
     for threshold in [.2,.35,.5]:
         model.pen_threshold=threshold;metrics=evaluate_rollouts(CPUInterface(model),validation,config,metadata)
         score=metrics['objective']+.02*np.mean([1-m['pen_f1'] for m in metrics['horizons'].values()])

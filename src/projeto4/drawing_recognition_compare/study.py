@@ -191,7 +191,7 @@ def test(config,output):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('action',choices=['prepare','search','test','all'])
-    parser.add_argument('--config',default='configs/recognition.json');args=parser.parse_args()
+    parser.add_argument('--config',default='configs/recognition_reproduce.json');args=parser.parse_args()
     config=read_json(ROOT/args.config);output=ROOT/'results'/config['name']
     setup(42,config['threads'],device='cpu' if args.action=='prepare' else 'cuda')
     if args.action in ['prepare','all']:prepare(config,output)

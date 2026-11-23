@@ -33,8 +33,7 @@ def export(config,families=None):
             'horizons':config['horizons'],'context_events':config['context_events'],'min_context_events':8,
             'delta_scale':metadata['delta_scale'],'position_scale':metadata['position_scale'],'time_scale':metadata['time_scale'],
             'spatial_step':config['spatial_step'],'classes':config['classes'],'labels':config['labels'],'seed':42,'epoch':saved['epoch'],
-            'pen_threshold':selected['pen_threshold'],'pooling':'masked_mean' if family=='mlp' else None,
-            'include_observed_count':family=='mlp','known_category':True,
+            'pen_threshold':selected['pen_threshold'],'known_category':True,
             'features':['dx/delta_scale','dy/delta_scale','pen_up','log1p(dt/time_scale)','x_relative/256','y_relative/256'],
             'weights':{key:np.round(value.detach().numpy().astype(np.float64),7).tolist() for key,value in model.state_dict().items()}}
         (folder/'model.json').write_text(json.dumps(exported,ensure_ascii=False,separators=(',',':')))

@@ -1,100 +1,47 @@
 # Projeto 4 — Séries temporais de desenhos
 
-**Previsão dos próximos traços (t+k) e reconhecimento progressivo da categoria.**
+[Relatório em PDF](relatorio.pdf) · [Reconhecimento no navegador](https://martinelipedro.github.io/projeto4-irn/) · [Previsão no navegador](https://martinelipedro.github.io/projeto4-irn/forecast/)
 
-[Laboratório interativo](https://martinelipedro.github.io/projeto4-irn/) · [Relatório único em PDF](relatorio.pdf) · [Laboratório de previsão](https://martinelipedro.github.io/projeto4-irn/forecast/)
+Usamos 42 mil desenhos de 12 categorias do Quick, Draw!, divididos em treino, validação e teste por desenho.
 
-A rede recebe somente os traços já observados e estima a categoria do desenho entre 12 possibilidades. O rótulo verdadeiro é o alvo supervisionado, **não uma entrada**. O site permite desenhar livremente ou reproduzir exemplos reais lentamente, acompanhando as hipóteses top-3 e as curvas de probabilidade das duas redes.
+| Tarefa | Entrada | Saída |
+| --- | --- | --- |
+| Previsão com GRU | Sequência observada e categoria fornecida | Próximos 5, 15 ou 30 eventos da caneta |
+| Reconhecimento com GRU | Sequência observada de movimentos | Probabilidades das 12 categorias |
+| Reconhecimento com MLP | Imagem binária do trecho observado, com 32 × 32 pixels | Probabilidades das 12 categorias |
 
-## Reconhecimento: o que comparamos
+## Rodar as demonstrações
 
-| Rede | Apresentação do prefixo | Arquitetura |
-|---|---|---|
-| GRU | Eventos ordenados: Δx, Δy, pen-up, log(1+Δt/0,1), x e y | GRU → densa → 12 classes |
-| MLP convencional | Imagem binária 32×32 achatada em 1.024 pixels | Densa → ReLU → densa → ReLU → 12 classes |
-
-A MLP de reconhecimento aplica camadas densas aos pixels do prefixo. A imagem preserva a geometria observada e remove a ordem em que os traços foram executados. Uma MLP sobre pontos concatenados ainda teria a ordem representada pelas posições do vetor e responderia a outra pergunta.
-
-Ambas as redes podem reconhecer antes do fim. A GRU dispõe de movimentos, intervalos e levantamentos da caneta; isso não garante melhor resultado em todo prefixo nem imunidade a rabiscos. As duas apresentações usam a caixa do próprio prefixo para normalizar posição e escala. Como essa normalização muda com o prefixo, reexecutamos a GRU sobre todos os eventos disponíveis a cada atualização.
-
-Arquitetura **e representação** mudam juntas: a comparação avalia dois sistemas completos, sem atribuir toda diferença exclusivamente à recorrência. O raster de baixa resolução também é uma limitação do comparador.
-
-## Resultados de reconhecimento
-
-<!-- RESULTS_START -->
-Acurácia e F1 macro no mesmo teste de 3.000 desenhos; médias das três inicializações 42/43/44, sem ensemble.
-
-| Observado | Acurácia GRU | Acurácia MLP | F1 GRU | F1 MLP |
-|---|---:|---:|---:|---:|
-| 25% | 63,62% | 51,47% | 0,633 | 0,505 |
-| 50% | 82,87% | 69,81% | 0,828 | 0,697 |
-| 75% | 90,50% | 81,10% | 0,905 | 0,810 |
-| 100% | 93,03% | 83,71% | 0,931 | 0,838 |
-<!-- RESULTS_END -->
-
-A busca e o checkpoint usam somente a validação desta comparação. O teste já havia sido observado em estudos anteriores, portanto não é confirmação externa inédita. Os exemplos demonstrativos pertencem exclusivamente à validação, com regras de seleção registradas, incluindo casos favoráveis a cada rede.
-
-## Protocolo
-
-- 36 mil desenhos de treino, 3 mil de validação e 3 mil de teste, com IDs e geometrias separados por desenho; 12 categorias e somente exemplos reconhecidos pelo jogo.
-- Mesmos prefixos e alvos para as duas redes: 25%, 50%, 75% e 100% dos eventos. A fração final é usada para escolher o corte de avaliação; não é atributo de entrada.
-- Busca por largura e taxa de aprendizagem: GRU H128/192, MLP H128/256, taxas 0,003/0,001. AdamW, dropout 0,1 e 32 épocas por execução.
-- Triagem de quatro candidatos por família na seed 42; dois finalistas repetidos com 43; escolha pela média da entropia cruzada de validação. Seed 44 apenas replica a configuração escolhida. As duas famílias são congeladas antes do teste.
-- Todos os classificadores são inicializados do zero. Um piloto de 16 épocas foi interrompido por subajuste observado na validação; seus pesos não inicializam os modelos principais.
-
-O relatório de apresentação tem duas partes. A previsão mostra o erro da GRU por horizonte. O reconhecimento resume a comparação pela acurácia ao longo do desenho. As demais métricas e análises estão em `results/drawing_recognition_compare_v2/`. [Detalhamento do protocolo](docs/RECONHECIMENTO.md).
-
-A galeria completa nos artefatos reúne **13 casos e 65 etapas**, com desenho parcial, raster da MLP, top-3 das duas redes, probabilidade da classe verdadeira e curvas. Cobre as 12 categorias e inclui acertos exclusivos de cada rede. O relato do peixe desenhado livremente pelo autor é identificado como registro da captura, separado dos exemplos de validação reproduzíveis.
-
-## Executar e verificar
+Na raiz do repositório, execute com Python 3.
 
 ```bash
-uv sync --group dev
-uv run pytest -q
-PYTHONPATH=src uv run python scripts/audit_recognition.py
-node site/tests/check.mjs
-node site/forecast/tests/check.mjs
 python3 -m http.server 8765 --directory site
 ```
 
-Abra http://127.0.0.1:8765. Os dois classificadores rodam num Web Worker local, sem backend e sem enviar desenhos a um servidor. O teste Node compara a inferência JavaScript a referências Python dos checkpoints efetivos.
+Abra [reconhecimento](http://127.0.0.1:8765/) ou [previsão](http://127.0.0.1:8765/forecast/). Os pesos já estão em `site/` e a inferência roda no navegador. Você pode usar os exemplos incluídos ou desenhar.
 
-Para reconstruir os diagnósticos, os exemplos do site e o PDF em CPU:
+## Repetir o treinamento e a avaliação
 
-```bash
-PYTHONPATH=src uv run python -m projeto4.drawing_recognition_compare.export
-PYTHONPATH=src uv run python -m projeto4.drawing_recognition_compare.report
-```
-
-O PDF requer `pdflatex`. A versão gerada fica em `results/drawing_recognition_compare_v2/report/relatorio.pdf`; as cópias de entrega estão na raiz e em `site/relatorio.pdf`.
-
-## Reproduzir o treinamento do zero
-
-O dataset preparado de 42 mil desenhos acompanha o repositório em `results/drawing_forecast_compare_v1/data/`. O reconhecimento reutiliza essas partições, sem checkpoints. Os caches de sequências normalizadas e imagens são reconstruídos automaticamente e não são versionados.
+Use Python 3.11 ou superior, `uv` e PyTorch com acesso a uma GPU NVIDIA via CUDA. O recorte preparado e as partições usadas no relatório acompanham o repositório.
 
 ```bash
-CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=src uv run python -m projeto4.drawing_recognition_compare.study all --config configs/recognition_reproduce.json
+uv sync
+CUBLAS_WORKSPACE_CONFIG=:4096:8 uv run python -m projeto4.drawing_forecast_compare all
+uv run python -m projeto4.drawing_recognition_compare.study all
 ```
 
-O comando usa um novo diretório de resultados e requer PyTorch com CUDA. O estudo de referência usou uma RTX 4050 de 6 GB, float32, determinismo habilitado e TF32 desligado; as versões estão em `results/drawing_recognition_compare_v2/environment.json`. Igualdade bit a bit não é garantida entre hardware e versões diferentes.
+Cada comando prepara a entrada, executa a busca de hiperparâmetros na validação e avalia as configurações escolhidas no teste. A previsão usa o banco de trajetórias extraído do treino e inicializa os pesos da GRU do zero. O reconhecimento inicializa GRU e MLP do zero. O PDF documenta os critérios e os resultados. As execuções novas gravam seus resultados em `results/drawing_forecast_reproduction_v1/` e `results/drawing_recognition_reproduction_v1/`.
 
-## Previsão: próximos pontos t+k
+## Conferir a execução
 
-A GRU prevê os próximos 5, 15 ou 30 eventos da caneta em `site/forecast/`. Ela recebe os movimentos observados e a categoria fornecida. O relatório apresenta o ajuste da GRU, as curvas de aprendizagem e os erros de trajetória. Os pesos, dados e históricos estão em `results/drawing_forecast_compare_v1/`.
+```bash
+uv run pytest -q
+node site/tests/check.mjs
+node site/forecast/tests/check.mjs
+```
 
-A galeria de previsão contém seis casos positivos de validação, dois por horizonte (5, 15, 30), com passado observado e continuação da GRU. O caso do peixe também inclui as curvas X/Y. A escolha usa critérios espaciais e de caneta, seguida de revisão visual. Os exemplos são selecionados deliberadamente; as métricas agregadas de teste continuam completas. Artefatos e regras: `results/drawing_forecast_compare_v1/successful_examples/`.
+Os testes JavaScript comparam a inferência no navegador com referências calculadas em Python. As duas demos usam os pesos da seed 42. Os checkpoints escolhidos, históricos e métricas das três seeds ficam em `results/`.
 
-## Organização
+O código dos modelos e do treino fica em `src/projeto4/`, e as configurações em `configs/`. A versão completa, com análises auxiliares e scripts de geração do PDF, está na [tag arquivo-experimentos](https://github.com/martinelipedro/projeto4-irn/tree/arquivo-experimentos).
 
-| Caminho | Conteúdo |
-|---|---|
-| `src/projeto4/drawing_recognition_compare/` | Apresentação dos dados, modelos, busca, avaliação, exportação e relatório único |
-| `configs/recognition*.json` | Configuração de referência e reprodução do zero |
-| `results/drawing_recognition_compare_v2/` | Históricos, checkpoints, seleções, previsões, métricas, diagnósticos e figuras |
-| `site/` | Reconhecimento interativo e modelos reais no navegador |
-| `site/forecast/` | Demonstração de previsão com a GRU |
-| `tests/` e `scripts/audit_recognition.py` | Invariantes e auditoria científica dos resultados |
-
-O workflow confere as duas demonstrações antes de publicar `site/` no GitHub Pages. O treinamento não ocorre no deploy.
-
-Dados: [Google Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset), **CC BY 4.0**; [atribuição](DATA_ATTRIBUTION.md). Código e redação elaborados com auxílio de IA, acompanhados de artefatos, testes e verificações visuais.
+Dados do Google Quick, Draw! sob CC BY 4.0. [Atribuição e proveniência](DATA_ATTRIBUTION.md)
