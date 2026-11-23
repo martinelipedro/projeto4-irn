@@ -6,9 +6,7 @@ Comparamos duas tarefas sobre 42 mil desenhos do Quick, Draw!. Uma GRU prevê os
 
 Usamos o Quick, Draw! para estudar duas tarefas. Primeiro, a GRU prevê os próximos movimentos da caneta a partir do trecho observado e da categoria fornecida. Depois, a GRU e a MLP tentam reconhecer a categoria de um desenho parcial.
 
-Cada desenho guarda a categoria, as coordenadas dos pontos, seus tempos e os limites entre traços. Esses registros formam uma série temporal porque a ordem e os intervalos dos movimentos descrevem como o desenho foi feito. Trabalhamos com 42.000 desenhos de 12 categorias, divididos por desenho inteiro em 36.000 para treino, 3.000 para validação e 3.000 para teste. A validação orienta a escolha dos modelos. O desempenho é medido no teste.
-
-O teste usa as mesmas partições dos estudos anteriores do projeto. O recorte contém desenhos reconhecidos pelo próprio jogo.
+As duas tarefas usam os mesmos desenhos e a mesma divisão de treino, validação e teste. A seção seguinte explica quais informações de cada desenho chegam às redes.
 
 **As duas tarefas do projeto**
 
@@ -16,6 +14,34 @@ O teste usa as mesmas partições dos estudos anteriores do projeto. O recorte c
 |---|---|---|
 | Previsão t+k | Movimentos e categoria | Próximos pontos da caneta |
 | Reconhecimento | Movimentos ou imagem parcial | Probabilidades das 12 categorias |
+
+## Dataset e entradas das redes
+
+O Quick, Draw! registra cada desenho como uma sequência de traços. Cada traço contém pontos com coordenadas X/Y e tempos em milissegundos. O registro também inclui a categoria pedida pelo jogo. Nosso recorte contém 42.000 desenhos reconhecidos pelo próprio jogo. As 12 categorias são gato, peixe, flor, casa, árvore, guarda-chuva, cachorro, tubarão, castelo, cacto, carro, bicicleta.
+
+Mantivemos 3.000 desenhos de treino, 250 de validação e 250 de teste por categoria. Isso dá 36.000, 3.000 e 3.000 desenhos, respectivamente. Todos os trechos de um desenho ficam na mesma partição. A validação orienta a escolha dos modelos e o teste mede o desempenho. Reutilizamos a partição de teste dos experimentos anteriores do projeto.
+
+### Do desenho bruto ao evento
+
+Dentro de cada traço, mantemos os extremos e guardamos um novo ponto quando a distância ao último ponto guardado chega a pelo menos 14 pixels. Os desenhos preparados têm de 12 a 180 eventos. Convertemos os tempos para segundos e marcamos o fim de cada traço com pen-up = 1. A ordem dos pontos e os tempos formam a série temporal.
+
+### O que chega a cada rede
+
+Cada evento da GRU reúne seis números. São os deslocamentos X/Y, o pen-up, o intervalo desde o ponto anterior transformado por log(1 + Δt/0,1) e as posições X/Y. A transformação logarítmica comprime pausas longas.
+
+Na previsão, usamos posições relativas ao primeiro ponto divididas por 256 e deslocamentos divididos por 28,8. O modelo recebe até 64 eventos e concatena a cada um um vetor aprendido de 16 valores que representa a categoria. No reconhecimento, centralizamos e redimensionamos o trecho já visto pela maior dimensão de sua caixa. A categoria fica como alvo de treinamento. A GRU usa os seis atributos em sequência, e a MLP recebe uma imagem binária dos mesmos traços, com 0 para fundo e 1 para tinta.
+
+**Exemplo com 32 eventos já observados**
+
+| Modelo | Informação de entrada | Tamanho da entrada |
+|---|---|---|
+| GRU de previsão | Sequência de seis atributos e vetor de 16 valores da categoria | 32 × 22 valores |
+| GRU de reconhecimento | Sequência dos seis atributos de cada ponto | 32 × 6 valores |
+| MLP de reconhecimento | Imagem binária de 32 × 32 pixels | 1.024 valores |
+
+![O mesmo trecho no reconhecimento, como imagem para a MLP e como sequência de eventos para a GRU. O mapa mostra até 36 eventos.](../figures/05_representacoes.png)
+
+O mesmo trecho no reconhecimento, como imagem para a MLP e como sequência de eventos para a GRU. O mapa mostra até 36 eventos.
 
 ## Como medimos os resultados
 

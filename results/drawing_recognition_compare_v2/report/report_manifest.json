@@ -23,7 +23,7 @@
   "recognition_cases_in_pdf": 4,
   "gallery_cases": 13,
   "gallery_snapshots": 65,
-  "figures": 9,
+  "figures": 10,
   "models": {
     "forecast": [
       "GRU"

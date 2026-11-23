@@ -335,7 +335,8 @@ Introdução às Redes Neurais Artificiais\\Pedro Martineli (RA: 193474)
             target=output/'figures'/path.name
             if target.resolve()!=path.resolve():shutil.copy2(path,target)
             relative='../figures/'+target.name
-            tex+='\\begin{figure}[H]\\centering\\includegraphics[width=\\linewidth,height=.57\\textheight,keepaspectratio]{'+relative+'}\\caption{'+escape(caption)+'}\\end{figure}\n'
+            height=section.get('figure_height',0.57)
+            tex+='\\begin{figure}[H]\\centering\\includegraphics[width=\\linewidth,height='+str(height)+'\\textheight,keepaspectratio]{'+relative+'}\\caption{'+escape(caption)+'}\\end{figure}\n'
             png=path.with_suffix('.png')
             if png.exists():
                 target_png=target.with_suffix('.png')
@@ -424,12 +425,31 @@ def build(output=None):
     overview = {
         'title':'O que fizemos?', 'unnumbered':True,
         'text':'Usamos o Quick, Draw! para estudar duas tarefas. Primeiro, a GRU prevê os próximos movimentos da caneta a partir do trecho observado e da categoria fornecida. Depois, a GRU e a MLP tentam reconhecer a categoria de um desenho parcial.\n\n'
-               'Cada desenho guarda a categoria, as coordenadas dos pontos, seus tempos e os limites entre traços. Esses registros formam uma série temporal porque a ordem e os intervalos dos movimentos descrevem como o desenho foi feito. Trabalhamos com 42.000 desenhos de 12 categorias, divididos por desenho inteiro em 36.000 para treino, 3.000 para validação e 3.000 para teste. A validação orienta a escolha dos modelos. O desempenho é medido no teste.\n\n'
-               'O teste usa as mesmas partições dos estudos anteriores do projeto. O recorte contém desenhos reconhecidos pelo próprio jogo.',
+               'As duas tarefas usam os mesmos desenhos e a mesma divisão de treino, validação e teste. A seção seguinte explica quais informações de cada desenho chegam às redes.',
         'tables':[('As duas tarefas do projeto',['Tarefa','Entrada','Saída'],[
             ['Previsão t+k','Movimentos e categoria','Próximos pontos da caneta'],
             ['Reconhecimento','Movimentos ou imagem parcial','Probabilidades das 12 categorias']])],
     }
+    forecast_source = ROOT/'results/drawing_forecast_compare_v1'
+    forecast_data = read_json(forecast_source/'data/metadata.json')
+    dataset_guide = [
+        {'title':'Dataset e entradas das redes', 'unnumbered':True, 'start_on_new_page':True,
+         'text':'O Quick, Draw! registra cada desenho como uma sequência de traços. Cada traço contém pontos com coordenadas X/Y e tempos em milissegundos. O registro também inclui a categoria pedida pelo jogo. Nosso recorte contém 42.000 desenhos reconhecidos pelo próprio jogo. As 12 categorias são '
+                + ', '.join(label.lower() for label in manifest['labels']) + '.\n\n'
+                'Mantivemos 3.000 desenhos de treino, 250 de validação e 250 de teste por categoria. Isso dá 36.000, 3.000 e 3.000 desenhos, respectivamente. Todos os trechos de um desenho ficam na mesma partição. A validação orienta a escolha dos modelos e o teste mede o desempenho. Reutilizamos a partição de teste dos experimentos anteriores do projeto.'},
+        {'title':'Do desenho bruto ao evento', 'level':2, 'unnumbered':True,
+         'text':'Dentro de cada traço, mantemos os extremos e guardamos um novo ponto quando a distância ao último ponto guardado chega a pelo menos 14 pixels. Os desenhos preparados têm de 12 a 180 eventos. Convertemos os tempos para segundos e marcamos o fim de cada traço com pen-up = 1. A ordem dos pontos e os tempos formam a série temporal.'},
+        {'title':'O que chega a cada rede', 'level':2, 'unnumbered':True,
+         'text':'Cada evento da GRU reúne seis números. São os deslocamentos X/Y, o pen-up, o intervalo desde o ponto anterior transformado por log(1 + Δt/0,1) e as posições X/Y. A transformação logarítmica comprime pausas longas.\n\n'
+                f'Na previsão, usamos posições relativas ao primeiro ponto divididas por {num(forecast_data["position_scale"],0)} e deslocamentos divididos por {num(forecast_data["delta_scale"],1)}. O modelo recebe até 64 eventos e concatena a cada um um vetor aprendido de 16 valores que representa a categoria. No reconhecimento, centralizamos e redimensionamos o trecho já visto pela maior dimensão de sua caixa. A categoria fica como alvo de treinamento. A GRU usa os seis atributos em sequência, e a MLP recebe uma imagem binária dos mesmos traços, com 0 para fundo e 1 para tinta.',
+         'tables':[('Exemplo com 32 eventos já observados', ['Modelo','Informação de entrada','Tamanho da entrada'],[
+             ['GRU de previsão','Sequência de seis atributos e vetor de 16 valores da categoria','32 × 22 valores'],
+             ['GRU de reconhecimento','Sequência dos seis atributos de cada ponto','32 × 6 valores'],
+             ['MLP de reconhecimento','Imagem binária de 32 × 32 pixels','1.024 valores'],
+         ])],
+         'figure_height':0.18,
+         'figures':[(figures['05_representacoes'][0], 'O mesmo trecho no reconhecimento, como imagem para a MLP e como sequência de eventos para a GRU. O mapa mostra até 36 eventos.')]},
+    ]
     metrics_guide = [
         {'title':'Como medimos os resultados', 'unnumbered':True, 'start_on_new_page':True,
          'text':'Na previsão, medimos a distância entre os pontos previstos e os pontos registrados. No reconhecimento, contamos quantas categorias as redes acertam.'},
@@ -447,7 +467,7 @@ def build(output=None):
         {'title':'De onde vêm os valores do relatório?', 'level':2, 'unnumbered':True,
          'text':'Na tabela de previsão, calculamos ADE e FDE em cada janela elegível de teste e fazemos a média das janelas para aquele horizonte. No gráfico de reconhecimento, contamos os acertos nos 3.000 desenhos de teste em cada corte. Por fim, fazemos a média dos resultados das três inicializações em cada tarefa.'},
     ]
-    forecast = forecast_sections(ROOT/'results/drawing_forecast_compare_v1',output)
+    forecast = forecast_sections(forecast_source,output)
     recognition = [
         {'macro_title':'Reconhecimento da categoria do desenho',
          'title':'Quando já dá para reconhecer o desenho?',
@@ -474,7 +494,7 @@ def build(output=None):
                 '5, 15 ou 30 movimentos da caneta. Para reconhecer desenhos parciais, comparamos uma GRU '
                 'que acompanha a sequência de pontos com uma MLP que recebe a imagem. Com metade do desenho, '
                 f'a acurácia foi de {pct(half_gru)} na GRU e {pct(half_mlp)} na MLP.')
-    sections = [overview]+metrics_guide+forecast+recognition
+    sections = [overview]+dataset_guide+metrics_guide+forecast+recognition
     references = [
         ('Google Creative Lab — Quick, Draw! Dataset e licença CC BY 4.0','https://github.com/googlecreativelab/quickdraw-dataset'),
         ('Cho et al. (2014) — artigo que apresenta a GRU','https://arxiv.org/abs/1406.1078'),

@@ -92,7 +92,7 @@
     "recognition_cases_in_pdf": 4,
     "gallery_cases": 13,
     "gallery_snapshots": 65,
-    "figures": 9,
+    "figures": 10,
     "models": {
       "forecast": [
         "GRU"
@@ -103,18 +103,19 @@
       ]
     },
     "test_previously_observed": true,
-    "pages": 14,
+    "pages": 15,
     "opening_overview_page": 1,
-    "metrics_page": 2,
-    "forecast_hyperparameters_page": 3,
+    "metrics_page": 3,
+    "forecast_hyperparameters_page": 4,
     "forecast_gallery_pages": [
-      5,
-      6
+      6,
+      7
     ],
-    "recognition_starts_on_page": 7,
-    "recognition_hyperparameters_page": 7
+    "recognition_starts_on_page": 8,
+    "recognition_hyperparameters_page": 8,
+    "dataset_and_inputs_page": 2
   },
-  "pdf_sha256": "2b3eda37a1adc82a895c55f962dce41c69e5c90121cc282d8abbe495a39ee7db",
+  "pdf_sha256": "6edde9749e91b3ed4221c1ea3f9ab576dff0c025c57291a1afcd78b1559f59af",
   "gallery": {
     "passed": true,
     "cases": 13,
