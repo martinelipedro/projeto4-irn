@@ -1,0 +1,13 @@
+.venv/
+.deps/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+results/**/last.pt
+results/**/data_sources/raw/
+results/drawing_forecast_reproduction_v1/

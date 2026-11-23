@@ -1,0 +1,80 @@
+{
+  "data_npz_sha256": "06447f18aedf6792fb0ba5b299be7e8e1b89007ae83f8d1bdd6f0bf2b7770ad9",
+  "source_data_npz_sha256": "06447f18aedf6792fb0ba5b299be7e8e1b89007ae83f8d1bdd6f0bf2b7770ad9",
+  "anchors_sha256": "359a21f74f2d0712421060d5c088d92a690a5289a298a1648e20344e7284efb3",
+  "runs": [
+    {
+      "spec": {
+        "id": "gru_trajectory_h128_m64_lr001",
+        "architecture": "trajectory",
+        "hidden": 128,
+        "n_modes": 64,
+        "lr": 0.001,
+        "epochs": 20,
+        "random_context": false
+      },
+      "seed": 42,
+      "source_directory": "results/quickdraw_forecast_scratch_gpu_v1/runs/gru_trajectory_h128_m64_lr001_seed42",
+      "checkpoint_sha256": "41be020ae6006304f2e456ee6eb293716e9b19138aaf9c67e9859ee8e3d56f6e",
+      "copied_checkpoint_sha256": "41be020ae6006304f2e456ee6eb293716e9b19138aaf9c67e9859ee8e3d56f6e",
+      "epochs_run": 20,
+      "warm_started": false,
+      "meaning": "Reutilização de execução completa já treinada do zero emCUDA com protocolo exatamente igual; não inicializa outra rede com esses pesos."
+    },
+    {
+      "spec": {
+        "id": "gru_trajectory_h128_m64_lr0005",
+        "architecture": "trajectory",
+        "hidden": 128,
+        "n_modes": 64,
+        "lr": 0.0005,
+        "epochs": 20,
+        "random_context": false
+      },
+      "seed": 42,
+      "source_directory": "results/quickdraw_forecast_scratch_gpu_v1/runs/gru_trajectory_h128_m64_lr0005_seed42",
+      "checkpoint_sha256": "b66a9a38855a3a882d35fb215265eca701eb422b2389aa403091554af44c894e",
+      "copied_checkpoint_sha256": "b66a9a38855a3a882d35fb215265eca701eb422b2389aa403091554af44c894e",
+      "epochs_run": 20,
+      "warm_started": false,
+      "meaning": "Reutilização de execução completa já treinada do zero emCUDA com protocolo exatamente igual; não inicializa outra rede com esses pesos."
+    },
+    {
+      "spec": {
+        "id": "gru_trajectory_h192_m64_lr001",
+        "architecture": "trajectory",
+        "hidden": 192,
+        "n_modes": 64,
+        "lr": 0.001,
+        "epochs": 20,
+        "random_context": false
+      },
+      "seed": 42,
+      "source_directory": "results/quickdraw_forecast_scratch_gpu_v1/runs/gru_trajectory_h192_m64_lr001_seed42",
+      "checkpoint_sha256": "d0d9941fd5ae4bc257d215ca7b4406241c4af74a6396de1c4ade54a704157713",
+      "copied_checkpoint_sha256": "d0d9941fd5ae4bc257d215ca7b4406241c4af74a6396de1c4ade54a704157713",
+      "epochs_run": 20,
+      "warm_started": false,
+      "meaning": "Reutilização de execução completa já treinada do zero emCUDA com protocolo exatamente igual; não inicializa outra rede com esses pesos."
+    },
+    {
+      "spec": {
+        "id": "gru_trajectory_h192_m64_lr0005",
+        "architecture": "trajectory",
+        "hidden": 192,
+        "n_modes": 64,
+        "lr": 0.0005,
+        "epochs": 20,
+        "random_context": false
+      },
+      "seed": 42,
+      "source_directory": "results/quickdraw_forecast_scratch_gpu_v1/runs/gru_trajectory_h192_m64_lr0005_seed42",
+      "checkpoint_sha256": "d2b793903742816922ef286e932509f09310be5e7c4ed835585e081dcd8c959d",
+      "copied_checkpoint_sha256": "d2b793903742816922ef286e932509f09310be5e7c4ed835585e081dcd8c959d",
+      "epochs_run": 20,
+      "warm_started": false,
+      "meaning": "Reutilização de execução completa já treinada do zero emCUDA com protocolo exatamente igual; não inicializa outra rede com esses pesos."
+    }
+  ],
+  "test_note": "Partição de teste já observada em estudos prévios; nova escolha por família usa somente validação."
+}

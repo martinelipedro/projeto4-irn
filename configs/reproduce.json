@@ -1,0 +1,192 @@
+{
+  "name": "drawing_forecast_reproduction_v1",
+  "classes": [
+    "cat",
+    "fish",
+    "flower",
+    "house",
+    "tree",
+    "umbrella",
+    "dog",
+    "shark",
+    "castle",
+    "cactus",
+    "car",
+    "bicycle"
+  ],
+  "labels": [
+    "Gato",
+    "Peixe",
+    "Flor",
+    "Casa",
+    "Árvore",
+    "Guarda-chuva",
+    "Cachorro",
+    "Tubarão",
+    "Castelo",
+    "Cacto",
+    "Carro",
+    "Bicicleta"
+  ],
+  "train_per_class": 3000,
+  "validation_per_class": 250,
+  "test_per_class": 250,
+  "recognized_only": true,
+  "spatial_step": 14.0,
+  "min_points": 12,
+  "max_points": 180,
+  "max_raw_points": 4000,
+  "max_seconds": 60,
+  "position_scale": 256.0,
+  "time_scale": 0.1,
+  "previous_experiments": [
+    "quickdraw_gru_v2",
+    "quickdraw_gru_temporal_v3",
+    "quickdraw_forecast_gru_v1"
+  ],
+  "split_seed": 20261117,
+  "context_events": 64,
+  "validation_cuts": [
+    16,
+    32
+  ],
+  "horizons": [
+    5,
+    15,
+    30
+  ],
+  "time_horizons": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "threads": 2,
+  "batch_size": 128,
+  "epochs": 20,
+  "patience": 15,
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "weight_decay": 1e-05,
+  "mixtures": 15,
+  "embedding": 16,
+  "pen_weight": 1.0,
+  "clock_weight": 0.15,
+  "scheduled_sampling_max": 0.15,
+  "decoders": [
+    "greedy"
+  ],
+  "raw_directory": "data/quickdraw_forecast/raw",
+  "planned_epochs": 45,
+  "source_experiment": "drawing_forecast_compare_v1",
+  "search_seeds": [
+    42,
+    43
+  ],
+  "initial_seed": 42,
+  "replication_seed": 44,
+  "finalists": 2,
+  "initialization": "All models built from scratch without pretrained weights; PyTorch seed initialization and common zero-initialized residual correction head.",
+  "test_note": "Same frozen test previously inspected in earlier experiments; not an unseen external confirmation.",
+  "device": "cuda",
+  "deterministic": true,
+  "reuse_gru_screening_from": null,
+  "families": {
+    "gru": {
+      "label": "GRU pura",
+      "candidates": [
+        {
+          "id": "gru_trajectory_h128_m64_lr001",
+          "architecture": "trajectory",
+          "hidden": 128,
+          "n_modes": 64,
+          "lr": 0.001,
+          "epochs": 20,
+          "random_context": false
+        },
+        {
+          "id": "gru_trajectory_h128_m64_lr0005",
+          "architecture": "trajectory",
+          "hidden": 128,
+          "n_modes": 64,
+          "lr": 0.0005,
+          "epochs": 20,
+          "random_context": false
+        },
+        {
+          "id": "gru_trajectory_h192_m64_lr001",
+          "architecture": "trajectory",
+          "hidden": 192,
+          "n_modes": 64,
+          "lr": 0.001,
+          "epochs": 20,
+          "random_context": false
+        },
+        {
+          "id": "gru_trajectory_h192_m64_lr0005",
+          "architecture": "trajectory",
+          "hidden": 192,
+          "n_modes": 64,
+          "lr": 0.0005,
+          "epochs": 20,
+          "random_context": false
+        }
+      ]
+    },
+    "mlp": {
+      "label": "MLP DeepSets sem recorrência",
+      "candidates": [
+        {
+          "id": "mlp_set_h128_m64_lr001",
+          "architecture": "deepsets",
+          "hidden": 128,
+          "n_modes": 64,
+          "lr": 0.001,
+          "epochs": 20,
+          "random_context": false,
+          "raster": false
+        },
+        {
+          "id": "mlp_set_h128_m64_lr0005",
+          "architecture": "deepsets",
+          "hidden": 128,
+          "n_modes": 64,
+          "lr": 0.0005,
+          "epochs": 20,
+          "random_context": false,
+          "raster": false
+        },
+        {
+          "id": "mlp_set_h192_m64_lr001",
+          "architecture": "deepsets",
+          "hidden": 192,
+          "n_modes": 64,
+          "lr": 0.001,
+          "epochs": 20,
+          "random_context": false,
+          "raster": false
+        },
+        {
+          "id": "mlp_set_h192_m64_lr0005",
+          "architecture": "deepsets",
+          "hidden": 192,
+          "n_modes": 64,
+          "lr": 0.0005,
+          "epochs": 20,
+          "random_context": false,
+          "raster": false
+        }
+      ]
+    }
+  },
+  "diagnostic_cuts": [
+    8,
+    16,
+    32,
+    64
+  ],
+  "selection_protocol": "Cada família: triagem42 de4candidatos,top2 repetidos43; escolha pela média42/43 e limiar comum; réplica44 não participa. Mesmosdados,bank,decoder,loss,epochs e augmentação. Testejáobservado em estudosanteriores.",
+  "encoder_note": "MLP poolingmédio mascarado+contagemobservada/64. Encoder invariávelàordem; Δ,posições,tempo e referencial causal do decoder retêm informação local. Não é prova de exclusividade das RNNs."
+}

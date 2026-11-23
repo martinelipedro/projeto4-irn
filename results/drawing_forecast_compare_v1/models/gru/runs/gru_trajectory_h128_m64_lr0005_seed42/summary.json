@@ -1,0 +1,22 @@
+{
+  "spec": {
+    "id": "gru_trajectory_h128_m64_lr0005",
+    "architecture": "trajectory",
+    "hidden": 128,
+    "n_modes": 64,
+    "lr": 0.0005,
+    "epochs": 20,
+    "random_context": false
+  },
+  "seed": 42,
+  "best_epoch": 20,
+  "epochs_run": 20,
+  "validation_objective": 0.4034813645816772,
+  "parameters": 111156,
+  "seconds": 42.74398942900007,
+  "directory": "runs/gru_trajectory_h128_m64_lr0005_seed42",
+  "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "warm_started": false,
+  "all_models_from_scratch": true,
+  "checkpoint_criterion": "ADE/256 +0,1*encerramento prematuro, média k5/15/30,100desenhos de validação por classe."
+}

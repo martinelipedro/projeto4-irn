@@ -1,0 +1,11 @@
+{
+  "task": "forecasting_only",
+  "models": [
+    "gru",
+    "mlp"
+  ],
+  "test_previously_observed": true,
+  "conditional_category": true,
+  "hypotheses_are_evaluated_not_assumed": true,
+  "narrative": "Não mede reconhecimento; GRU e DeepSets compartilham representação e decoder."
+}

@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "python_tests": 4,
+  "site": {
+    "passed": true,
+    "fixtures": 24,
+    "maximum_absolute_error": 3.1682384096787253e-06,
+    "categories": 12,
+    "examples": 14,
+    "relative_assets": true,
+    "model_parity": true,
+    "backend_required": false
+  },
+  "pdf_sha256": "7d34ce46908fe21d60910c06de60d3fec409181ed339a26cab90db7969086d73",
+  "task": "forecasting_only"
+}

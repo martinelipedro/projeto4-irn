@@ -1,0 +1,129 @@
+{
+  "fingerprint": "1abf371ea9f55c332d20a0735ca65cc83a90374cc537f822c05ead4092f49ee5",
+  "delta_scale": 28.804401397705078,
+  "position_scale": 256.0,
+  "time_scale": 0.1,
+  "counts": {
+    "train": 36000,
+    "validation": 3000,
+    "test": 3000
+  },
+  "quality": {
+    "cat": {
+      "read": 15826,
+      "prior_test_excluded": 850,
+      "unrecognized": 2507,
+      "eligible": 11732,
+      "fresh": 7322
+    },
+    "fish": {
+      "read": 23453,
+      "unrecognized": 1318,
+      "prior_test_excluded": 500,
+      "eligible": 21461,
+      "fresh": 19292
+    },
+    "flower": {
+      "read": 17372,
+      "prior_test_excluded": 850,
+      "unrecognized": 707,
+      "eligible": 15276,
+      "fresh": 10477
+    },
+    "house": {
+      "read": 20810,
+      "prior_test_excluded": 850,
+      "unrecognized": 451,
+      "eligible": 18974,
+      "fresh": 13870
+    },
+    "tree": {
+      "read": 16881,
+      "unrecognized": 743,
+      "prior_test_excluded": 500,
+      "eligible": 14186,
+      "fresh": 11976
+    },
+    "umbrella": {
+      "read": 20882,
+      "prior_test_excluded": 500,
+      "unrecognized": 626,
+      "eligible": 19500,
+      "fresh": 17282
+    },
+    "dog": {
+      "read": 14244,
+      "prior_test_excluded": 250,
+      "unrecognized": 792,
+      "eligible": 11937,
+      "fresh": 9789
+    },
+    "shark": {
+      "read": 15363,
+      "prior_test_excluded": 250,
+      "unrecognized": 829,
+      "eligible": 13435,
+      "fresh": 11268
+    },
+    "castle": {
+      "read": 28871,
+      "unrecognized": 1352,
+      "prior_test_excluded": 250,
+      "eligible": 24367,
+      "fresh": 22177
+    },
+    "cactus": {
+      "read": 17736,
+      "unrecognized": 876,
+      "prior_test_excluded": 250,
+      "eligible": 16221,
+      "fresh": 14024
+    },
+    "car": {
+      "read": 13925,
+      "unrecognized": 1662,
+      "prior_test_excluded": 250,
+      "eligible": 10840,
+      "fresh": 8781
+    },
+    "bicycle": {
+      "read": 32813,
+      "prior_test_excluded": 250,
+      "unrecognized": 986,
+      "eligible": 29140,
+      "fresh": 26944
+    }
+  },
+  "features": [
+    "dx/delta_scale",
+    "dy/delta_scale",
+    "pen_up",
+    "log1p(dt/time_scale)",
+    "x_relative/position_scale",
+    "y_relative/position_scale"
+  ],
+  "split_protocol": "Desenhos inteiros. Validação e teste sem IDs ou geometrias de qualquer experimento anterior. Testes anteriores excluídos de todas as novas partições.",
+  "sampling": "Causal por distância; preserva limites de traços e timestamps. Inclui somente desenhos reconhecidos pelo jogo, em todas as partições.",
+  "horizon": "k eventos futuros; também prevemos delta_t. Nenhuma duração final ou bbox futura define a entrada.",
+  "source_files": {
+    "cat": "5a810f07ddbe8a1f7682c222659f352e7ee2a39ec5aa20c0d3a8275c0b7469ce",
+    "fish": "78f8f69ffe1547c39cf0e34298de43d13e40210495a024b06ad776e754fd6a08",
+    "flower": "349c7416e0d9494123ffd7ff4ffde168134d29bd67d881bf6cbd2eced66edff8",
+    "house": "571dd782caf2c2bc7eef760076e6fef4c5f090381958a39ad48ba105a6148b7d",
+    "tree": "d2c96fb2b50fcdb1cfa1a152dc83fec284883c76d4b2ebf680840552c843105a",
+    "umbrella": "90d27cc44aedd8beaeb60728a488a9435191ce40183a1291449e10d146857e38",
+    "dog": "b28f30c09079e5d841022db61576d84bcef669ca8f658a54cb39b351d41a57c5",
+    "shark": "77f884365a341c7215e9d3c2780cb6fa3279cb72effeea849c47122d2bed47ec",
+    "castle": "41acaee4a61cb4850022fae8e6c162cf12b8797cedaf2befc5826e4554333e50",
+    "cactus": "9fa0d87d4b2814a39ecf08806044dea02f74e326f6a4fea3c6496e1911a69ab6",
+    "car": "74e46259b3b86c38faa66dbd5f0c5c5bcdf5212db54253ee9075f60641840975",
+    "bicycle": "9221b4ec7b54ef3772be98a4ab91e71c18deb359870f740578773df3dce6a4f4"
+  },
+  "data_fingerprint": "1d641c45d36f790131803aacd814fd1818c3e7052f92b27bace36b7aecab1995",
+  "source_fingerprint": "73ff1689906a6c8fffb29f8bc18ef9c5abff81cd752366ed714cf8f6ede4173b",
+  "source_experiment": "quickdraw_forecast_12_v2",
+  "test_previously_observed": true,
+  "copied_records_sha256": "d1b2b88f1f13cfac4d85b47ad279114db0a989947dbc8fdda6b969794983b7fe",
+  "partition_manifest": "records.json",
+  "prepared_data_origin": "quickdraw_forecast_scratch_gpu_v1"
+}

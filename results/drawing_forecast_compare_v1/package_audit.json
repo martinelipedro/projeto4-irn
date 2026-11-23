@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "prepared_sha256": "06447f18aedf6792fb0ba5b299be7e8e1b89007ae83f8d1bdd6f0bf2b7770ad9",
+  "split_sizes": {
+    "train": 36000,
+    "validation": 3000,
+    "test": 3000
+  },
+  "id_and_geometry_disjoint": true,
+  "anchors_fit_split": "train",
+  "reused_checkpoint_hashes_match": true,
+  "raw_reconstruction_examples_checked": 36,
+  "offline_prepare_fresh_config": true,
+  "self_contained_exports_identical": true,
+  "external_legacy_imports": false,
+  "raw_reconstruction_per_class": {
+    "cat": 3,
+    "fish": 3,
+    "flower": 3,
+    "house": 3,
+    "tree": 3,
+    "umbrella": 3,
+    "dog": 3,
+    "shark": 3,
+    "castle": 3,
+    "cactus": 3,
+    "car": 3,
+    "bicycle": 3
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "dataset": "Google Quick, Draw!, raw moderated NDJSON",
+  "license": "CC BY 4.0",
+  "records": "../data/records.json",
+  "prepared_npz_bytes": 44265200,
+  "prepared_npz_sha256": "06447f18aedf6792fb0ba5b299be7e8e1b89007ae83f8d1bdd6f0bf2b7770ad9",
+  "partition_note": "Same fixed IDs/splits as the source study; tests previously observed. No repartitioning.",
+  "sampling": {
+    "spatial_step": 14.0,
+    "position_scale": 256.0,
+    "time_scale": 0.1
+  },
+  "files": {
+    "cat": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/cat.ndjson",
+      "bytes": 67108864,
+      "sha256": "5a810f07ddbe8a1f7682c222659f352e7ee2a39ec5aa20c0d3a8275c0b7469ce"
+    },
+    "fish": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/fish.ndjson",
+      "bytes": 67108864,
+      "sha256": "78f8f69ffe1547c39cf0e34298de43d13e40210495a024b06ad776e754fd6a08"
+    },
+    "flower": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/flower.ndjson",
+      "bytes": 67108864,
+      "sha256": "349c7416e0d9494123ffd7ff4ffde168134d29bd67d881bf6cbd2eced66edff8"
+    },
+    "house": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/house.ndjson",
+      "bytes": 67108864,
+      "sha256": "571dd782caf2c2bc7eef760076e6fef4c5f090381958a39ad48ba105a6148b7d"
+    },
+    "tree": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/tree.ndjson",
+      "bytes": 67108864,
+      "sha256": "d2c96fb2b50fcdb1cfa1a152dc83fec284883c76d4b2ebf680840552c843105a"
+    },
+    "umbrella": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/umbrella.ndjson",
+      "bytes": 67108864,
+      "sha256": "90d27cc44aedd8beaeb60728a488a9435191ce40183a1291449e10d146857e38"
+    },
+    "dog": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/dog.ndjson",
+      "bytes": 67108864,
+      "sha256": "b28f30c09079e5d841022db61576d84bcef669ca8f658a54cb39b351d41a57c5"
+    },
+    "shark": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/shark.ndjson",
+      "bytes": 67108864,
+      "sha256": "77f884365a341c7215e9d3c2780cb6fa3279cb72effeea849c47122d2bed47ec"
+    },
+    "castle": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/castle.ndjson",
+      "bytes": 134217728,
+      "sha256": "41acaee4a61cb4850022fae8e6c162cf12b8797cedaf2befc5826e4554333e50"
+    },
+    "cactus": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/cactus.ndjson",
+      "bytes": 67108864,
+      "sha256": "9fa0d87d4b2814a39ecf08806044dea02f74e326f6a4fea3c6496e1911a69ab6"
+    },
+    "car": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/car.ndjson",
+      "bytes": 67108864,
+      "sha256": "74e46259b3b86c38faa66dbd5f0c5c5bcdf5212db54253ee9075f60641840975"
+    },
+    "bicycle": {
+      "url": "https://storage.googleapis.com/quickdraw_dataset/full/raw/bicycle.ndjson",
+      "bytes": 134217728,
+      "sha256": "9221b4ec7b54ef3772be98a4ab91e71c18deb359870f740578773df3dce6a4f4"
+    }
+  }
+}
