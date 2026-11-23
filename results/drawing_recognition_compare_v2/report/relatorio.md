@@ -47,13 +47,26 @@ Na tabela de previsão, calculamos ADE e FDE em cada janela elegível de teste e
 
 ## Previsão dos próximos traços (t+k)
 
-### O que a GRU prevê
+### Como continuar um desenho em andamento?
 
-Entregamos à GRU até 64 eventos observados e a categoria do desenho. Com t=32 e k=15, por exemplo, ela recebe os primeiros 32 movimentos e devolve os eventos 33 a 47. Cada previsão inclui a posição, o estado da caneta e o intervalo desde o ponto anterior. O horizonte k pode ser de 5, 15 ou 30 eventos.
+Imagine que alguém começou o contorno de um peixe. Conhecemos a categoria e vemos por onde a caneta passou. Queremos estimar por onde ela vai passar a seguir, incluindo onde levanta e quanto tempo leva entre os pontos. Por exemplo, com t=32 e k=15, a GRU recebe os eventos 1 a 32 e prevê os eventos 33 a 47. Testamos horizontes de 5, 15 e 30 eventos.
 
-Cada ponto observado é representado por seis valores. São os deslocamentos X/Y, o indicador de fim de traço (pen-up), o intervalo de tempo comprimido com logaritmo e a posição X/Y relativa ao primeiro ponto. O pen-up marca quando a pessoa levanta a caneta ao terminar um trecho. A GRU resume a sequência em um estado. O decoder usa esse estado para escolher e ajustar uma entre 64 trajetórias-base da categoria, aprendidas no treino.
+A entrada tem até 64 eventos observados. Cada um contém deslocamentos X/Y, fim de traço (pen-up), intervalo comprimido com logaritmo e posição X/Y relativa ao primeiro ponto. A GRU lê esses movimentos junto com a categoria fornecida. Seu estado final orienta o decoder, que escolhe e ajusta uma entre 64 trajetórias-base da categoria, aprendidas no treino.
 
-Testamos 128 e 192 unidades ocultas e taxas de aprendizagem de 0,001 e 0,0005. Treinamos com AdamW por 20 épocas. Os dois melhores candidatos da primeira inicialização foram repetidos com outra inicialização. A escolha usou o erro de posição e a capacidade de seguir até o fim do horizonte na validação, além do acerto de pen-up. A validação selecionou 192 unidades ocultas e taxa 0,001. Os resultados do teste usam a média de três inicializações.
+#### Ajuste dos hiperparâmetros da previsão
+
+Cruzamos duas larguras da GRU com duas taxas iniciais de aprendizagem. Cada treino usou AdamW por 20 épocas. Avaliamos os quatro candidatos com a inicialização 42 e repetimos os dois melhores com a 43. O escore de validação considera distância em pixels, encerramentos antes do horizonte e erros de pen-up. Para cada finalista, também testamos limiares de pen-up de 0,2, 0,35 e 0,5 e escolhemos o menor escore médio.
+
+A configuração selecionada tem 192 unidades ocultas, taxa de 0,001 e limiar de 0,2. A inicialização 44 entra na média final do teste, depois da seleção.
+
+**Busca da GRU na validação. Menor escore é melhor. A média é calculada para os finalistas.**
+
+| Unidades | Taxa inicial | Escore 42 | Média 42 e 43 |
+|---|---|---|---|
+| 128 | 0,0010 | 0,3963 | 0,3937 |
+| 128 | 0,0005 | 0,4204 | — |
+| 192 | 0,0010 | 0,3802 | 0,3800 |
+| 192 | 0,0005 | 0,4055 | — |
 
 ### Aprendizagem e erro de previsão
 
@@ -89,18 +102,34 @@ A linha escura mostra os 16 eventos observados. A linha verde-azulada mostra a c
 
 ## Reconhecimento da categoria do desenho
 
-### O que cada rede observa
+### Quando já dá para reconhecer o desenho?
 
-As duas redes classificam os mesmos desenhos parciais. A GRU recebe pontos em ordem, com movimentos, tempos e fins de traço. A MLP recebe a imagem desses mesmos pontos, com 32 × 32 pixels achatados em um vetor. Cada rede devolve 12 probabilidades, e a categoria com maior probabilidade é o palpite.
+Um arco isolado pode ser o começo de um peixe, de uma flor ou de um guarda-chuva. Queremos saber em que momento os traços já permitem reconhecer a categoria. Mostramos às duas redes o mesmo desenho em quatro estágios e pedimos um palpite entre 12 classes.
 
-Para cada rede, testamos duas larguras e taxas iniciais de 0,001 e 0,003. Os treinos duraram 32 épocas. Escolhemos a configuração pela perda de validação nos prefixos de 25%, 50%, 75% e 100% do desenho. As configurações vencedoras foram treinadas com três inicializações.
+A GRU recebe os movimentos em sequência, com tempos e fins de traço. A MLP vê a imagem dos pontos já desenhados, em 32 × 32 pixels achatados em um vetor. Cada rede devolve 12 probabilidades. Comparamos a categoria de maior probabilidade com a categoria correta e observamos como a acurácia muda à medida que chegam novos pontos.
 
-**Configurações escolhidas na validação**
+#### Ajuste dos hiperparâmetros do reconhecimento
 
-| Rede | Largura principal | Taxa inicial |
-|---|---|---|
-| GRU | 192 | 0,003 |
-| MLP de imagem | 256 | 0,001 |
+Em cada rede, cruzamos duas larguras com duas taxas iniciais e treinamos cada configuração por 32 épocas. Testamos as quatro combinações com a inicialização 42 e repetimos as duas melhores com a 43. O critério foi a menor perda média de validação nos quatro cortes de 25%, 50%, 75% e 100%. Essa perda, chamada de entropia cruzada, aumenta quando a rede atribui pouca probabilidade à categoria correta.
+
+A GRU escolhida tem 192 unidades e taxa de 0,003. A MLP escolhida tem 256 e 128 unidades ocultas e taxa de 0,001. As duas taxas finalistas da MLP ficaram muito próximas. A inicialização 44 entra na média do teste.
+
+**Busca da GRU e da MLP na validação. Menor perda é melhor. A média é calculada para os finalistas.**
+
+| Rede | Largura | Taxa inicial | Perda 42 | Média 42 e 43 |
+|---|---|---|---|---|
+| GRU | 128 | 0,003 | 0,57989 | 0,57835 |
+| GRU | 128 | 0,001 | 0,99582 | — |
+| GRU | 192 | 0,003 | 0,54501 | 0,53929 |
+| GRU | 192 | 0,001 | 0,78148 | — |
+| MLP de imagem | 128 | 0,003 | 0,92273 | — |
+| MLP de imagem | 128 | 0,001 | 0,94818 | — |
+| MLP de imagem | 256 | 0,003 | 0,84914 | 0,84845 |
+| MLP de imagem | 256 | 0,001 | 0,85127 | 0,84841 |
+
+### Como as redes aprenderam
+
+Para cada configuração escolhida, usamos os pesos da época com menor perda de validação. As curvas mostram como a perda evoluiu ao longo das épocas nas três inicializações.
 
 ![Curvas de treino e validação das duas redes. As estrelas marcam as épocas escolhidas com base na validação.](../figures/02_aprendizagem.png)
 

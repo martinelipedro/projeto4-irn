@@ -103,16 +103,18 @@
       ]
     },
     "test_previously_observed": true,
-    "pages": 13,
+    "pages": 14,
     "opening_overview_page": 1,
     "metrics_page": 2,
+    "forecast_hyperparameters_page": 3,
     "forecast_gallery_pages": [
       5,
       6
     ],
-    "recognition_starts_on_page": 7
+    "recognition_starts_on_page": 7,
+    "recognition_hyperparameters_page": 7
   },
-  "pdf_sha256": "88449b410670b3de75a945d93d54754548fb1eddb63d45c80a532162ab34dd4a",
+  "pdf_sha256": "2b3eda37a1adc82a895c55f962dce41c69e5c90121cc282d8abbe495a39ee7db",
   "gallery": {
     "passed": true,
     "cases": 13,

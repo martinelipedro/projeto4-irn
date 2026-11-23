@@ -407,8 +407,17 @@ def build(output=None):
         page['text'] = description
         page['caption'] = ('As colunas revelam 10%, 25%, 50%, 75% e 100% dos eventos. A imagem em preto e branco é a entrada da MLP. '
                            'As barras mostram os três palpites de cada rede. A curva mostra a probabilidade da categoria correta.')
-    widths = [[NAMES[f],selections[f]['best']['spec']['hidden'],
-               num(selections[f]['best']['spec']['lr'],3)] for f in NAMES]
+    search_rows = []
+    for family, selection in selections.items():
+        finalist_scores = {(row['spec']['hidden'],row['spec']['lr']):row['score']
+                           for row in selection['finalists']}
+        for row in selection['screening']:
+            width, rate = row['spec']['hidden'], row['spec']['lr']
+            mean = finalist_scores.get((width,rate))
+            search_rows.append([NAMES[family],width,num(rate,3),num(row['score'],5),
+                                num(mean,5) if mean is not None else '—'])
+    gru_width, gru_rate = (selections['gru']['best']['spec'][k] for k in ['hidden','lr'])
+    mlp_width, mlp_rate = (selections['mlp']['best']['spec'][k] for k in ['hidden','lr'])
     chart = accuracy_figure(output,metrics)
     half_gru,half_mlp = (metrics[f]['mean']['0.5']['accuracy'] for f in NAMES)
     full_gru,full_mlp = (metrics[f]['mean']['1.0']['accuracy'] for f in NAMES)
@@ -441,10 +450,16 @@ def build(output=None):
     forecast = forecast_sections(ROOT/'results/drawing_forecast_compare_v1',output)
     recognition = [
         {'macro_title':'Reconhecimento da categoria do desenho',
-         'title':'O que cada rede observa',
-         'text':'As duas redes classificam os mesmos desenhos parciais. A GRU recebe pontos em ordem, com movimentos, tempos e fins de traço. A MLP recebe a imagem desses mesmos pontos, com 32 × 32 pixels achatados em um vetor. Cada rede devolve 12 probabilidades, e a categoria com maior probabilidade é o palpite.\n\n'
-                'Para cada rede, testamos duas larguras e taxas iniciais de 0,001 e 0,003. Os treinos duraram 32 épocas. Escolhemos a configuração pela perda de validação nos prefixos de 25%, 50%, 75% e 100% do desenho. As configurações vencedoras foram treinadas com três inicializações.',
-         'tables':[('Configurações escolhidas na validação',['Rede','Largura principal','Taxa inicial'],widths)],
+         'title':'Quando já dá para reconhecer o desenho?',
+         'text':'Um arco isolado pode ser o começo de um peixe, de uma flor ou de um guarda-chuva. Queremos saber em que momento os traços já permitem reconhecer a categoria. Mostramos às duas redes o mesmo desenho em quatro estágios e pedimos um palpite entre 12 classes.\n\n'
+                'A GRU recebe os movimentos em sequência, com tempos e fins de traço. A MLP vê a imagem dos pontos já desenhados, em 32 × 32 pixels achatados em um vetor. Cada rede devolve 12 probabilidades. Comparamos a categoria de maior probabilidade com a categoria correta e observamos como a acurácia muda à medida que chegam novos pontos.'},
+        {'title':'Ajuste dos hiperparâmetros do reconhecimento','level':2,
+         'text':'Em cada rede, cruzamos duas larguras com duas taxas iniciais e treinamos cada configuração por 32 épocas. Testamos as quatro combinações com a inicialização 42 e repetimos as duas melhores com a 43. O critério foi a menor perda média de validação nos quatro cortes de 25%, 50%, 75% e 100%. Essa perda, chamada de entropia cruzada, aumenta quando a rede atribui pouca probabilidade à categoria correta.\n\n'
+                f'A GRU escolhida tem {gru_width} unidades e taxa de {num(gru_rate,3)}. A MLP escolhida tem {mlp_width} e {mlp_width//2} unidades ocultas e taxa de {num(mlp_rate,3)}. As duas taxas finalistas da MLP ficaram muito próximas. A inicialização 44 entra na média do teste.',
+         'tables':[('Busca da GRU e da MLP na validação. Menor perda é melhor. A média é calculada para os finalistas.',
+                    ['Rede','Largura','Taxa inicial','Perda 42','Média 42 e 43'],search_rows)]},
+        {'title':'Como as redes aprenderam','start_on_new_page':True,
+         'text':'Para cada configuração escolhida, usamos os pesos da época com menor perda de validação. As curvas mostram como a perda evoluiu ao longo das épocas nas três inicializações.',
          'figures':[(figures['02_aprendizagem'][0], 'Curvas de treino e validação das duas redes. As estrelas marcam as épocas escolhidas com base na validação.')]},
         {'title':'Acurácia conforme o desenho aparece',
          'start_on_new_page':True,

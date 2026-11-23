@@ -72,7 +72,18 @@ def compact_examples(output, cases):
 def build_sections(source, output):
     gru = source/'models/gru'
     selection = read_json(gru/'selection.json')
-    chosen = selection['best']['spec']
+    winner = selection['best']
+    chosen = winner['spec']
+    finalist_scores = {
+        spec['id']: min(row['score'] for row in selection['finalist_scores'] if row['spec'] == spec)
+        for spec in selection['finalists']
+    }
+    search_rows = []
+    for row in selection['screening']:
+        spec = row['spec']
+        mean = finalist_scores.get(spec['id'])
+        search_rows.append([spec['hidden'], number(spec['lr'], 4), number(row['score'], 4),
+                            number(mean, 4) if mean is not None else '—'])
     metrics = read_json(gru/'test_metrics.json')['horizons']
     cases = read_json(source/'successful_examples/selected_cases.json')['cases']
     other_cases = compact_examples(output, cases[:-1])
@@ -83,11 +94,14 @@ def build_sections(source, output):
     learning = learning_figure(gru, output, chosen['id'])
     return [
         {'macro_title': 'Previsão dos próximos traços (t+k)',
-         'title': 'O que a GRU prevê',
-         'text': 'Entregamos à GRU até 64 eventos observados e a categoria do desenho. Com t=32 e k=15, por exemplo, ela recebe os primeiros 32 movimentos e devolve os eventos 33 a 47. Cada previsão inclui a posição, o estado da caneta e o intervalo desde o ponto anterior. O horizonte k pode ser de 5, 15 ou 30 eventos.\n\n'
-                 'Cada ponto observado é representado por seis valores. São os deslocamentos X/Y, o indicador de fim de traço (pen-up), o intervalo de tempo comprimido com logaritmo e a posição X/Y relativa ao primeiro ponto. O pen-up marca quando a pessoa levanta a caneta ao terminar um trecho. A GRU resume a sequência em um estado. O decoder usa esse estado para escolher e ajustar uma entre 64 trajetórias-base da categoria, aprendidas no treino.\n\n'
-                 'Testamos 128 e 192 unidades ocultas e taxas de aprendizagem de 0,001 e 0,0005. Treinamos com AdamW por 20 épocas. Os dois melhores candidatos da primeira inicialização foram repetidos com outra inicialização. A escolha usou o erro de posição e a capacidade de seguir até o fim do horizonte na validação, além do acerto de pen-up. '
-                 f'A validação selecionou {chosen["hidden"]} unidades ocultas e taxa {number(chosen["lr"],3)}. Os resultados do teste usam a média de três inicializações.'},
+         'title': 'Como continuar um desenho em andamento?',
+         'text': 'Imagine que alguém começou o contorno de um peixe. Conhecemos a categoria e vemos por onde a caneta passou. Queremos estimar por onde ela vai passar a seguir, incluindo onde levanta e quanto tempo leva entre os pontos. Por exemplo, com t=32 e k=15, a GRU recebe os eventos 1 a 32 e prevê os eventos 33 a 47. Testamos horizontes de 5, 15 e 30 eventos.\n\n'
+                 'A entrada tem até 64 eventos observados. Cada um contém deslocamentos X/Y, fim de traço (pen-up), intervalo comprimido com logaritmo e posição X/Y relativa ao primeiro ponto. A GRU lê esses movimentos junto com a categoria fornecida. Seu estado final orienta o decoder, que escolhe e ajusta uma entre 64 trajetórias-base da categoria, aprendidas no treino.'},
+        {'title':'Ajuste dos hiperparâmetros da previsão', 'level':2,
+         'text':'Cruzamos duas larguras da GRU com duas taxas iniciais de aprendizagem. Cada treino usou AdamW por 20 épocas. Avaliamos os quatro candidatos com a inicialização 42 e repetimos os dois melhores com a 43. O escore de validação considera distância em pixels, encerramentos antes do horizonte e erros de pen-up. Para cada finalista, também testamos limiares de pen-up de 0,2, 0,35 e 0,5 e escolhemos o menor escore médio.\n\n'
+                f'A configuração selecionada tem {chosen["hidden"]} unidades ocultas, taxa de {number(chosen["lr"],3)} e limiar de {number(winner["pen_threshold"],1)}. A inicialização 44 entra na média final do teste, depois da seleção.',
+         'tables':[('Busca da GRU na validação. Menor escore é melhor. A média é calculada para os finalistas.',
+                    ['Unidades','Taxa inicial','Escore 42','Média 42 e 43'],search_rows)]},
         {'title': 'Aprendizagem e erro de previsão',
          'start_on_new_page': True,
          'text': 'Na tabela, o ADE e o FDE aumentam conforme a GRU prevê mais eventos. Os valores são médias de três inicializações e incluem todas as janelas elegíveis do teste para cada horizonte.',
