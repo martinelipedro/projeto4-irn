@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "cases": 6,
+  "split": "validation",
+  "horizons": [
+    5,
+    15,
+    30
+  ],
+  "source_ids_and_points_checked": true,
+  "predictions_recomputed_from_frozen_checkpoints": true,
+  "maximum_coordinate_error_pixels": 6.103515625e-05,
+  "all_shown_gru_pen_states_match": true,
+  "no_early_end_in_shown_gru_cases": true,
+  "aggregate_test_unfiltered": true
+}

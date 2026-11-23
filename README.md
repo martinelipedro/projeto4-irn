@@ -1,19 +1,19 @@
-# Projeto 4 — Traço a traço
+# Projeto 4 — Séries temporais de desenhos
 
-**Reconhecimento progressivo de desenhos: GRU temporal versus MLP convencional sobre imagem.**
+**Previsão dos próximos traços (t+k) e reconhecimento progressivo da categoria.**
 
-[Laboratório interativo](https://martinelipedro.github.io/projeto4-irn/) · [Relatório único em PDF](relatorio.pdf) · [Experimento secundário de previsão](https://martinelipedro.github.io/projeto4-irn/forecast/)
+[Laboratório interativo](https://martinelipedro.github.io/projeto4-irn/) · [Relatório único em PDF](relatorio.pdf) · [Laboratório de previsão](https://martinelipedro.github.io/projeto4-irn/forecast/)
 
 A rede recebe somente os traços já observados e estima a categoria do desenho entre 12 possibilidades. O rótulo verdadeiro é o alvo supervisionado, **não uma entrada**. O site permite desenhar livremente ou reproduzir exemplos reais lentamente, acompanhando as hipóteses top-3 e as curvas de probabilidade das duas redes.
 
-## O que comparamos
+## Reconhecimento: o que comparamos
 
 | Rede | Apresentação do prefixo | Arquitetura |
 |---|---|---|
 | GRU | Eventos ordenados: Δx, Δy, pen-up, log(1+Δt/0,1), x e y | GRU → densa → 12 classes |
 | MLP convencional | Imagem binária 32×32 achatada em 1.024 pixels | Densa → ReLU → densa → ReLU → 12 classes |
 
-A MLP principal não usa Deep Sets, convolução, agregação de eventos, relógio ou canal de recência. A imagem preserva a geometria observada e remove a ordem em que os traços foram executados. Uma MLP sobre pontos concatenados ainda teria a ordem representada pelas posições do vetor e responderia a outra pergunta.
+A MLP de reconhecimento não usa Deep Sets, convolução, agregação de eventos, relógio ou canal de recência. A imagem preserva a geometria observada e remove a ordem em que os traços foram executados. Uma MLP sobre pontos concatenados ainda teria a ordem representada pelas posições do vetor e responderia a outra pergunta.
 
 Ambas as redes podem reconhecer antes do fim. A GRU dispõe de movimentos, intervalos e levantamentos da caneta; isso não garante melhor resultado em todo prefixo nem imunidade a rabiscos. As duas apresentações usam a caixa do próprio prefixo para normalizar posição e escala. Como essa normalização muda com o prefixo, reexecutamos a GRU sobre todos os eventos disponíveis a cada atualização.
 
@@ -42,7 +42,7 @@ A busca e o checkpoint usam somente a validação desta comparação. O teste j�
 - Triagem de quatro candidatos por família na seed 42; dois finalistas repetidos com 43; escolha pela média da entropia cruzada de validação. Seed 44 apenas replica a configuração escolhida. As duas famílias são congeladas antes do teste.
 - Todos os classificadores são inicializados do zero. Um piloto de 16 épocas foi interrompido por subajuste observado na validação; seus pesos não inicializam os modelos principais.
 
-O relatório reúne curvas de aprendizagem e reconhecimento, acurácia/F1/top-3, qualidade probabilística, confusões por categoria, intervalos pareados e controles de ordem, pausas, cruzamentos e normalização. [Detalhamento do protocolo](docs/RECONHECIMENTO.md).
+O relatório está organizado em duas macroseções: previsão dos traços e categorização do desenho. Reúne curvas de aprendizagem e reconhecimento, acurácia/F1/top-3, qualidade probabilística, confusões por categoria, intervalos pareados e controles de ordem, pausas, cruzamentos e normalização. [Detalhamento do protocolo](docs/RECONHECIMENTO.md).
 
 A galeria visual reúne **13 casos e 65 etapas**, com desenho parcial, raster da MLP, top-3 das duas redes, probabilidade da classe verdadeira e curvas. Cobre as 12 categorias e inclui acertos exclusivos de cada rede. O relato do peixe desenhado livremente pelo autor é identificado como registro da captura, separado dos exemplos de validação reproduzíveis.
 
@@ -78,19 +78,21 @@ CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=src uv run python -m projeto4.drawing
 
 O comando usa um novo diretório de resultados e requer PyTorch com CUDA. O estudo de referência usou uma RTX 4050 de 6 GB, float32, determinismo habilitado e TF32 desligado; as versões estão em `results/drawing_recognition_compare_v2/environment.json`. Igualdade bit a bit não é garantida entre hardware e versões diferentes.
 
-## Estudo secundário: prever os próximos pontos
+## Previsão: próximos pontos t+k
 
-A previsão de trajetória permanece disponível em `site/forecast/`, separada do reconhecimento. Nela a categoria é fornecida e o horizonte é de 5, 15 ou 30 eventos futuros. Seu comparador é **Deep Sets**, identificado como tal: não é a MLP convencional do estudo principal. ADE/FDE desse experimento não são métricas de reconhecimento. Seus dados, treinos, fontes e resultados permanecem em `results/drawing_forecast_compare_v1/`; o relatório único resume a tarefa secundária.
+A previsão de trajetória está disponível em `site/forecast/`, separada do reconhecimento. Nela a categoria é fornecida e o horizonte é de 5, 15 ou 30 eventos futuros. Seu comparador é **Deep Sets**, identificado como tal: não é a MLP convencional do estudo principal. ADE/FDE desse experimento não são métricas de reconhecimento. Seus dados, treinos, fontes e resultados permanecem em `results/drawing_forecast_compare_v1/`; o relatório único tem uma macroseção completa para cada tarefa.
+
+A galeria de previsão contém seis casos positivos de validação, dois por horizonte (5, 15, 30), com passado, futuro real, futuro previsto, zoom e curvas X/Y. A escolha usa critérios espaciais e de caneta, seguida de revisão visual. Os exemplos são selecionados deliberadamente; as métricas agregadas de teste continuam completas. Artefatos e regras: `results/drawing_forecast_compare_v1/successful_examples/`.
 
 ## Organização
 
 | Caminho | Conteúdo |
 |---|---|
-| `src/projeto4/drawing_recognition_compare/` | Apresentação dos dados, modelos, busca, avaliação, exportação e relatório principal |
+| `src/projeto4/drawing_recognition_compare/` | Apresentação dos dados, modelos, busca, avaliação, exportação e relatório único |
 | `configs/recognition*.json` | Configuração de referência e reprodução do zero |
 | `results/drawing_recognition_compare_v2/` | Históricos, checkpoints, seleções, previsões, métricas, diagnósticos e figuras |
 | `site/` | Reconhecimento interativo e modelos reais no navegador |
-| `site/forecast/` | Demonstração secundária de previsão, com GRU e Deep Sets |
+| `site/forecast/` | Demonstração de previsão, com GRU e Deep Sets |
 | `tests/` e `scripts/audit_recognition.py` | Invariantes e auditoria científica dos resultados |
 
 O workflow confere as duas demonstrações antes de publicar `site/` no GitHub Pages. O treinamento não ocorre no deploy.

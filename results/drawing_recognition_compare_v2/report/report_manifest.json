@@ -1,13 +1,25 @@
 {
-  "task": "recognition_primary_forecast_secondary",
-  "figures": 30,
+  "task": "forecast_and_recognition",
+  "macro_sections": [
+    "Previsão dos próximos traços (t+k)",
+    "Reconhecimento da categoria do desenho"
+  ],
+  "forecast_success_cases": 6,
+  "forecast_gallery_only_successes": true,
+  "figures": 39,
   "recognition_figures": 29,
   "gallery_cases": 13,
   "gallery_snapshots": 65,
-  "sections": 18,
-  "models": [
-    "GRU",
-    "conventional image MLP"
-  ],
+  "sections": 23,
+  "models": {
+    "forecast": [
+      "GRU",
+      "Deep Sets"
+    ],
+    "recognition": [
+      "GRU",
+      "conventional image MLP"
+    ]
+  },
   "test_previously_observed": true
 }

@@ -47,5 +47,27 @@ for(const e of examples){
   for(let i=1;i<e.points.length;i++)assert.ok(e.points[i][3]>=e.points[i-1][3],'Timestamp fora de ordem.');
 }
 assert.equal(categories.size,definitions.gru.classes.length);
+const reportCases=read('assets/report_cases.json');
+assert.equal(reportCases.length,6);
+assert.deepEqual(reportCases.map(e=>e.default_horizon).sort((a,b)=>a-b),[5,5,15,15,30,30]);
+const gru=new ForecastModel(definitions.gru);
+for(const example of reportCases){
+  const cut=example.default_cut,k=example.default_horizon;
+  assert.equal(example.source_split,'validation');
+  assert.equal(example.report_case,true);
+  assert.ok(example.points.length>=cut+k);
+  const past=gru.encodePoints(example.points.slice(0,cut),{resample:false});
+  const result=gru.predict(past.tokens,example.label,{horizon:k});
+  assert.ok(result.ended.every(flag=>!flag));
+  let ade=0;
+  result.tokens.forEach((token,i)=>{
+    const xy=token.slice(4,6).map((coordinate,axis)=>past.points[0][axis]+coordinate*gru.position_scale);
+    compare(xy,example.reference_gru[i].slice(0,2),'caso do relatório',.01);
+    const target=example.points[cut+i];
+    assert.equal(token[2],target[2]);
+    ade+=Math.hypot(xy[0]-target[0],xy[1]-target[1]);
+  });
+  assert.ok(Math.abs(ade/k-example.ade_gru)<.01);
+}
 const study=read('assets/study.json');assert.equal(study.horizons.length,3);assert.ok(study.horizons.every(r=>[5,15,30].includes(r.k)&&Number.isFinite(r.gru_ade)&&Number.isFinite(r.mlp_ade)));
-console.log(JSON.stringify({passed:true,fixtures,maximum_absolute_error:maxError,categories:categories.size,examples:examples.length,relative_assets:true,model_parity:true,backend_required:false}));
+console.log(JSON.stringify({passed:true,fixtures,maximum_absolute_error:maxError,categories:categories.size,examples:examples.length,report_cases:reportCases.length,relative_assets:true,model_parity:true,backend_required:false}));

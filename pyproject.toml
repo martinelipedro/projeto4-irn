@@ -1,7 +1,7 @@
 [project]
 name = "projeto4-irn"
 version = "1.0.0"
-description = "Reconhecimento progressivo com GRU temporal versus MLP convencional de imagem"
+description = "Previsão dos traços t+k e reconhecimento progressivo com GRU e comparadores neurais"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["numpy>=2.0", "scipy>=1.13", "torch>=2.6", "matplotlib>=3.9", "scikit-learn>=1.7"]

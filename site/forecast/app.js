@@ -38,7 +38,9 @@ function invalidate(){stopPlayback();state.result=null;state.reveal=0;render();}
 
 function loadExample(index,{autoplay=true}={}){
   index=Math.max(0,Math.min(state.examples.length-1,Number(index)));if(!state.examples[index])return;
-  state.mode='example';state.exampleIndex=index;const example=currentExample();state.label=Number(example.label);state.prefix=Math.min(example.default_cut??16,Math.min(64,example.points.length-state.horizon));state.prefix=Math.max(8,state.prefix);
+  state.mode='example';state.exampleIndex=index;const example=currentExample();state.label=Number(example.label);
+  if(example.report_case){state.horizon=example.default_horizon;resetPerturbations(false);$('showTruth').checked=true;}
+  state.prefix=Math.max(8,Math.min(example.default_cut??16,64,example.points.length-state.horizon));
   $('exampleSelect').value=index;$('sourceTag').textContent=`Quick, Draw! · ${example.source_split==='test'?'teste':'validação'} · ID ${example.id}`;
   $('exampleNote').textContent=example.explanation??example.selection_rule??'Exemplo real definido pela regra descrita no relatório.';
   invalidate();if(state.ready)requestPrediction({autoplay});
@@ -219,9 +221,23 @@ $('inputCanvas').addEventListener('pointerup',pointerEnd);$('inputCanvas').addEv
 
 async function loadAssets(){
   try{
-    const response=await fetch('assets/examples.json');if(!response.ok)throw Error('Exemplos indisponíveis.');const data=await response.json();
-    state.examples=Array.isArray(data)?data:data.examples;if(!state.examples?.length)throw Error('Nenhum exemplo disponível.');
-    $('exampleSelect').replaceChildren(...state.examples.map((e,i)=>Object.assign(document.createElement('option'),{value:i,textContent:(e.category_name??e.category??'Desenho')+(e.themes?.includes('mlp_vence')?' · caso MLP':e.themes?.includes('gru_vence')?' · caso GRU':'')})));
+    const read=async name=>{
+      const response=await fetch(`assets/${name}.json`);
+      if(!response.ok)throw Error('Exemplos indisponíveis.');
+      return response.json();
+    };
+    const [data,curated]=await Promise.all([read('examples'),read('report_cases')]);
+    const examples=Array.isArray(data)?data:data.examples;
+    state.examples=[...curated,...examples];
+    const gallery=document.createElement('optgroup');gallery.label='Previsões bem-sucedidas do relatório';
+    const exploration=document.createElement('optgroup');exploration.label='Outros exemplos para explorar';
+    state.examples.forEach((example,index)=>{
+      const option=document.createElement('option');option.value=index;
+      option.textContent=example.report_case?`${example.category_name} · k = ${example.default_horizon}`:
+        (example.category_name??example.category??'Desenho');
+      (example.report_case?gallery:exploration).append(option);
+    });
+    $('exampleSelect').replaceChildren(gallery,exploration);
     state.dataReady=true;checkReady();
     const studyResponse=await fetch('assets/study.json');if(studyResponse.ok)renderStudy(await studyResponse.json());
   }catch(error){$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível carregar os exemplos. Recarregue a página.';console.error(error);}

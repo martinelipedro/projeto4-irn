@@ -23,6 +23,19 @@ try{
   assert.equal(await evaluate('window.__forecastDemo.state.result.models.mlp.points.length'),15);
   assert.ok((await evaluate("document.getElementById('gruADE').textContent")).includes('px'));
   assert.ok((await evaluate("document.getElementById('mlpADE').textContent")).includes('px'));
+  const reportCases=JSON.parse(await evaluate(`JSON.stringify(window.__forecastDemo.state.examples
+    .map((e,index)=>({index,report_case:e.report_case,cut:e.default_cut,k:e.default_horizon,ade:e.ade_gru}))
+    .filter(e=>e.report_case))`));
+  assert.equal(reportCases.length,6);
+  for(const example of reportCases){
+    await evaluate(`document.getElementById('exampleSelect').value='${example.index}';
+      document.getElementById('exampleSelect').dispatchEvent(new Event('change'))`);
+    await ready();
+    assert.equal(await evaluate('window.__forecastDemo.state.result.contextCount'),example.cut);
+    assert.equal(await evaluate('window.__forecastDemo.state.result.horizon'),example.k);
+    assert.ok(Math.abs(await evaluate('window.__forecastDemo.state.result.models.gru.metrics.ade')-example.ade)<.01);
+  }
+  await evaluate('window.__forecastDemo.loadExample(0,{autoplay:false})');await ready();
   await evaluate("document.getElementById('horizon').value='5';document.getElementById('horizon').dispatchEvent(new Event('change'))");await ready();
   await evaluate('window.__forecastDemo.setPrefix(16,{autoplay:false})');await ready();
   assert.equal(await evaluate('window.__forecastDemo.state.result.horizon'),5);

@@ -1,6 +1,6 @@
 # Reconhecimento progressivo: protocolo e motivação
 
-A comparação principal passa a ser entre uma **GRU temporal** e uma **MLP convencional sobre imagem**, ambas classificadoras de 12 categorias. O estudo de previsão publicado anteriormente permanece identificado como secundário; seus resultados não são métricas de reconhecimento.
+A comparação de reconhecimento é entre uma **GRU temporal** e uma **MLP convencional sobre imagem**, ambas classificadoras de 12 categorias. O relatório tem duas macroseções: previsão dos traços e reconhecimento da categoria. As métricas de previsão não são métricas de reconhecimento.
 
 ## Por que substituir Deep Sets
 

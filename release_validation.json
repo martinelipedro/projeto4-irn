@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "task": "recognition_primary_forecast_secondary",
+  "task": "forecast_and_recognition",
   "python_tests": 8,
   "site": {
     "passed": true,
@@ -68,21 +68,38 @@
     "same_bitmap_order_probe": true
   },
   "report": {
-    "task": "recognition_primary_forecast_secondary",
-    "figures": 30,
+    "task": "forecast_and_recognition",
+    "macro_sections": [
+      "Previsão dos próximos traços (t+k)",
+      "Reconhecimento da categoria do desenho"
+    ],
+    "forecast_success_cases": 6,
+    "forecast_gallery_only_successes": true,
+    "figures": 39,
     "recognition_figures": 29,
     "gallery_cases": 13,
     "gallery_snapshots": 65,
-    "sections": 18,
-    "models": [
-      "GRU",
-      "conventional image MLP"
-    ],
+    "sections": 23,
+    "models": {
+      "forecast": [
+        "GRU",
+        "Deep Sets"
+      ],
+      "recognition": [
+        "GRU",
+        "conventional image MLP"
+      ]
+    },
     "test_previously_observed": true,
-    "pages": 31,
-    "opening_overview_page": 1
+    "pages": 41,
+    "opening_overview_page": 1,
+    "forecast_gallery_pages": [
+      8,
+      13
+    ],
+    "recognition_starts_on_page": 14
   },
-  "pdf_sha256": "7d3d44737e1df6345a80cec86fb0912461e74662d91116d938c3f8901a707abd",
+  "pdf_sha256": "2d041eac44df82086ff9ff8f3856543cc16653d7d48cf223f3ca7cb256c252ef",
   "gallery": {
     "passed": true,
     "cases": 13,
@@ -105,5 +122,45 @@
       "mlp": 2.384185791015625e-07
     },
     "fish_selection_rebuilt_from_validation": true
+  },
+  "forecast_gallery": {
+    "passed": true,
+    "cases": 6,
+    "split": "validation",
+    "horizons": [
+      5,
+      15,
+      30
+    ],
+    "source_ids_and_points_checked": true,
+    "predictions_recomputed_from_frozen_checkpoints": true,
+    "maximum_coordinate_error_pixels": 6.103515625e-05,
+    "all_shown_gru_pen_states_match": true,
+    "no_early_end_in_shown_gru_cases": true,
+    "aggregate_test_unfiltered": true
+  },
+  "forecast_browser": {
+    "passed": true,
+    "url": "http://127.0.0.1:8878/forecast/",
+    "browser": "Firefox BiDi",
+    "checks": [
+      "inferência dos dois modelos",
+      "prefixo16/32",
+      "horizonte5/30",
+      "passo exato",
+      "pausa e ritmo lento",
+      "futuro real não altera previsão",
+      "translação",
+      "escala",
+      "permutação DeepSets",
+      "pen-up",
+      "categoria fornecida",
+      "desenho por mouse",
+      "sem métricas sem verdade",
+      "desfazer",
+      "390px sem overflow"
+    ],
+    "gru_pixels": 1400,
+    "report_cases_ui_verified": 6
   }
 }

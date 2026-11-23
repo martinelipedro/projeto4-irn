@@ -1,4 +1,4 @@
-"""Relatório único: reconhecimento GRU/MLP convencional e previsão secundária."""
+"""Relatório único em duas partes: previsão de traços e reconhecimento de desenhos."""
 import argparse
 import csv
 import json
@@ -15,6 +15,7 @@ import numpy as np
 from ..io import ROOT, read_json, write_json
 from .data import represent, permute_strokes
 from .gallery import make_gallery
+from ..drawing_forecast_compare.report_sections import build_sections as forecast_sections
 
 NAMES = {'gru': 'GRU', 'mlp': 'MLP de imagem'}
 COLORS = {'gru': '#087F8C', 'mlp': '#D96646'}
@@ -295,24 +296,29 @@ def make_figures(output, config, manifest, selections, metrics, diagnostics, exa
 
 def render(output, abstract, sections, references):
     folder=output/'report';folder.mkdir(exist_ok=True)
-    title='Reconhecimento progressivo de desenhos: GRU temporal versus MLP de imagem'
+    title='Previsão de traços e reconhecimento de desenhos com redes neurais'
     tex=r'''\documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}\usepackage[brazilian]{babel}
 \usepackage[margin=2cm]{geometry}\usepackage{graphicx,booktabs,longtable,amsmath,amssymb,hyperref,float,xcolor,fancyhdr,array}
 \definecolor{ink}{HTML}{203448}\definecolor{accent}{HTML}{087F8C}
-\hypersetup{colorlinks=true,urlcolor=accent,linkcolor=ink,pdftitle={Reconhecimento progressivo: GRU temporal versus MLP de imagem},pdfauthor={Pedro Martineli}}
+\hypersetup{colorlinks=true,urlcolor=accent,linkcolor=ink,pdftitle={Previsão de traços e reconhecimento de desenhos},pdfauthor={Pedro Martineli}}
 \setlength{\parindent}{0pt}\setlength{\parskip}{6pt}\setlength{\headheight}{14pt}
-\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small Projeto 4 — Reconhecimento de séries temporais}\fancyhead[R]{\small Quick, Draw!}\fancyfoot[C]{\thepage}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small Projeto 4 — Modelagem temporal de desenhos}\fancyhead[R]{\small Quick, Draw!}\fancyfoot[C]{\thepage}
 \begin{document}\begin{center}{\Large\bfseries\color{ink} '''+escape(title)+r'''}\\[5pt]
 Introdução às Redes Neurais Artificiais\\Pedro Martineli (RA: 193474)
 \end{center}\textbf{Resumo.} '''+escape(abstract)+'\n'
     md='# '+title+'\n\n'+abstract+'\n\n'
+    in_part=False
     for section in sections:
         heading=section['title'];text=section['text'];level=section.get('level',1)
-        if section.get('start_on_new_page'):
+        if section.get('macro_title'):
+            tex+='\\clearpage\n\\part{'+escape(section['macro_title'])+'}\n'
+            md+='## '+section['macro_title']+'\n\n'
+            in_part=True
+        elif section.get('start_on_new_page'):
             tex+='\\clearpage\n'
-        tex+='\\'+('section' if level==1 else 'subsection')+'{'+escape(heading)+'}\n'+escape(text)+'\n'
-        md+='#'*(level+1)+' '+heading+'\n\n'+text+'\n\n'
+        tex+='\\'+('section' if level==1 else 'subsection')+('*' if section.get('unnumbered') else '')+'{'+escape(heading)+'}\n'+escape(text)+'\n'
+        md+='#'*(level+1+int(in_part))+' '+heading+'\n\n'+text+'\n\n'
         for equation in section.get('equations',[]):
             tex+='\\[\n'+equation+'\n\\]\n';md+='$$\n'+equation+'\n$$\n\n'
         for caption,head,rows in section.get('tables',[]):
@@ -340,7 +346,7 @@ Introdução às Redes Neurais Artificiais\\Pedro Martineli (RA: 193474)
             tex+='\\clearpage\n\\subsection*{'+escape(page['title'])+'}\n'+escape(page['text'])+'\n'
             path=Path(page['figure']);relative='../figures/'+path.name
             tex+='\\begin{figure}[H]\\centering\\includegraphics[width=\\linewidth,height=.75\\textheight,keepaspectratio]{'+relative+'}\\caption{'+escape(page['caption'])+'}\\end{figure}\n'
-            md+='### '+page['title']+'\n\n'+page['text']+'\n\n!['+page['caption']+'](../figures/'+path.with_suffix('.png').name+')\n\n'+page['caption']+'\n\n'
+            md+='#### '+page['title']+'\n\n'+page['text']+'\n\n!['+page['caption']+'](../figures/'+path.with_suffix('.png').name+')\n\n'+page['caption']+'\n\n'
         if section.get('pages'):
             tex+='\\clearpage\n'
     tex+='\\section*{Referências}\\begin{enumerate}\n';md+='## Referências\n\n'
@@ -349,7 +355,7 @@ Introdução às Redes Neurais Artificiais\\Pedro Martineli (RA: 193474)
     tex+='\\end{enumerate}\\small Dados: Google Quick, Draw!, CC BY 4.0. Código e redação elaborados com auxílio de IA; resultados acompanhados de artefatos e verificações numéricas.\\end{document}'
     (folder/'relatorio.tex').write_text(tex);(folder/'relatorio.md').write_text(md)
     for _ in range(2):
-        run=subprocess.run(['pdflatex','-interaction=nonstopmode','-halt-on-error','relatorio.tex'],cwd=folder,capture_output=True,text=True)
+        run=subprocess.run(['pdflatex','-interaction=nonstopmode','-halt-on-error','relatorio.tex'],cwd=folder,capture_output=True,text=True,encoding='utf-8',errors='replace')
         if run.returncode:
             (folder/'compile_error.txt').write_text(run.stdout+run.stderr)
             raise RuntimeError(str(folder/'compile_error.txt'))
@@ -409,22 +415,21 @@ def build(output=None):
     conclusion=(f'No desenho completo, a acurácia média foi {pct(full_gru)} para a GRU e {pct(full_mlp)} para a MLP, '
                 f'uma diferença de {num(difference,2)} pontos percentuais (GRU menos MLP). '
                 f'Com apenas 25% dos eventos, os valores foram {pct(initial_gru)} e {pct(initial_mlp)}, respectivamente. ')
-    abstract=('Investigamos o reconhecimento progressivo de 12 categorias de desenhos do Quick, Draw!. Uma GRU recebe eventos ordenados da caneta; uma MLP convencional recebe a imagem binária do mesmo prefixo, sem ordem de execução. '
-              'Selecionamos hiperparâmetros por validação, treinamos do zero e repetimos as configurações escolhidas com três inicializações. '+conclusion+
-              'A análise inclui aprendizado, probabilidades, confusões, exemplos e perturbações de ordem, pausas e pen-up. A comparação altera arquitetura e representação conjuntamente e não prova superioridade universal da recorrência. Um estudo secundário, explicitamente separado nas perguntas e métricas, examina a previsão de eventos futuros.')
+    abstract=('Estudamos duas tarefas de séries temporais sobre desenhos do Quick, Draw!, com as mesmas partições de 42 mil desenhos e 12 categorias. Na Parte I, uma GRU prevê os próximos 5, 15 ou 30 eventos da caneta, condicionada à categoria fornecida, e é comparada a Deep Sets com decoder comum. Mostramos continuações bem-sucedidas selecionadas na validação, mantendo a avaliação quantitativa completa do teste. Na Parte II, uma GRU e uma MLP convencional de imagem reconhecem a categoria a partir do desenho parcial, sem receber o rótulo como entrada. '+conclusion+
+              'Em ambas as tarefas, hiperparâmetros e checkpoints são escolhidos pela validação e as configurações finais têm três inicializações. O relatório combina aprendizagem, métricas e exemplos visuais, distinguindo seleção qualitativa de casos e desempenho agregado. O teste já havia sido observado em estudos anteriores; os resultados não constituem confirmação externa inédita.')
     sections=[
-        {'title':'O que fizemos?',
-         'text':'Construímos um sistema que recebe um desenho ainda em andamento e tenta reconhecer qual objeto está sendo desenhado. Comparamos duas formas de observar o mesmo desenho parcial: uma GRU acompanha a sequência de movimentos da caneta, enquanto uma MLP convencional observa sua forma como imagem. As duas redes atualizam seus palpites conforme chegam novos pontos.\n\n'
-                'Os dados vêm do Google Quick, Draw!, um jogo em que pessoas desenham objetos solicitados. Cada registro associa uma categoria a uma sequência de traços, com coordenadas X/Y e tempos dos pontos. Derivamos os levantamentos da caneta dos limites desses traços. Assim, podemos revelar o desenho aos poucos e estudar uma série temporal multivariada, em vez de usar apenas sua imagem final.\n\n'
-                f'Nosso recorte contém {integer(sum(manifest["counts"].values()))} desenhos de 12 categorias, como peixe, gato, casa e bicicleta. São {integer(manifest["counts"]["train"])} desenhos para aprender os padrões, {integer(manifest["counts"]["validation"])} para ajustar as configurações e {integer(manifest["counts"]["test"])} para avaliar os modelos escolhidos. Retivemos apenas desenhos reconhecidos pelo próprio jogo e mantivemos cada desenho inteiro em uma única partição.\n\n'
-                'Transformamos cada desenho em versões parciais. A GRU recebe movimentos, pausas e posições em ordem; a MLP recebe os pixels da imagem parcial. A categoria verdadeira serve somente para ensinar e avaliar, nunca como entrada. A saída de ambas é uma probabilidade para cada uma das 12 categorias.\n\n'
-                f'Treinamos as redes do zero, buscamos larguras e taxas de aprendizagem na validação e repetimos as configurações escolhidas com {len(config["seeds"])} inicializações. Comparamos acertos, erros e probabilidades ao longo do desenho, além de testar mudanças de ordem e de canais temporais. O site executa os modelos treinados e a galeria mostra exemplos reais passo a passo. O reconhecimento é o estudo principal; a previsão de próximos pontos aparece como experimento secundário.',
-         'tables':[('Resumo da comparação principal', ['Rede','O que recebe','O que devolve'],[
-             ['GRU temporal','Movimentos da caneta em ordem','Probabilidades de 12 categorias'],
-             ['MLP convencional','Imagem parcial em 1.024 pixels','Probabilidades de 12 categorias']])]},
+        {'title':'O que fizemos?', 'unnumbered':True,
+         'text':'Construímos dois experimentos complementares a partir do movimento da caneta. Na Parte I, perguntamos qual será a continuação de um desenho: a rede recebe o passado e uma categoria fornecida e prevê os eventos t+1 até t+k. Na Parte II, perguntamos qual objeto está sendo desenhado: as redes recebem apenas o desenho parcial e devolvem probabilidades para as categorias. Os modelos e os objetivos de treinamento são separados.\n\n'
+                'Os dados vêm do Google Quick, Draw!, um jogo em que pessoas desenham objetos solicitados. Cada registro contém uma categoria e uma sequência de traços, com coordenadas X/Y e tempos dos pontos. Os limites dos traços indicam levantamentos da caneta. Isso permite revelar o desenho aos poucos e estudar sua evolução, além da imagem final.\n\n'
+                f'Nosso recorte contém {integer(sum(manifest["counts"].values()))} desenhos de 12 categorias. São {integer(manifest["counts"]["train"])} para treinamento, {integer(manifest["counts"]["validation"])} para validação e {integer(manifest["counts"]["test"])} para teste. Retivemos desenhos reconhecidos pelo jogo e mantivemos cada desenho inteiro em uma única partição, compartilhada pelos dois experimentos.\n\n'
+                'A previsão usa uma GRU e um comparador Deep Sets sobre os mesmos movimentos, com saída de posições, caneta e tempo. A categorização compara uma GRU temporal a uma MLP convencional sobre pixels. A categoria é entrada apenas na previsão; no reconhecimento, é somente o alvo de ensino e avaliação.\n\n'
+                'Ajustamos larguras e taxas na validação, repetimos as configurações escolhidas com três inicializações e medimos os resultados em teste. As páginas de previsão destacam situações coerentes e bem-sucedidas; as médias do teste permanecem completas. As páginas de reconhecimento acompanham hipóteses que mudam enquanto o desenho cresce. O site permite explorar as duas tarefas com os modelos treinados.',
+         'tables':[('As duas perguntas do projeto', ['Experimento','O que recebe','O que devolve'],[
+             ['Previsão t+k','Movimentos e categoria fornecida','Próximos eventos da caneta'],
+             ['Reconhecimento','Movimentos ou imagem parcial','Probabilidades de categorias']])]},
         {'title':'Objetivo e ajuste dos hiperparâmetros',
          'start_on_new_page':True,
-         'text':'O objetivo principal é classificar uma janela temporal crescente de movimentos da caneta: reconhecer o objeto antes de o usuário terminar. Em vez de fornecer a categoria e pedir uma continuação, como no estudo de previsão, removemos a categoria da entrada e pedimos uma distribuição sobre as 12 categorias. A pergunta experimental é como um sistema que lê a sequência se compara a uma MLP convencional que observa somente o desenho parcial como imagem. Não pressupomos que a GRU ganhe em todo prefixo, categoria ou exemplo. '
+         'text':'O objetivo desta parte é classificar uma janela temporal crescente de movimentos da caneta: reconhecer o objeto antes de o usuário terminar. Em vez de fornecer a categoria e pedir uma continuação, como no estudo de previsão, removemos a categoria da entrada e pedimos uma distribuição sobre as 12 categorias. A pergunta experimental é como um sistema que lê a sequência se compara a uma MLP convencional que observa somente o desenho parcial como imagem. Não pressupomos que a GRU ganhe em todo prefixo, categoria ou exemplo. '
                 'O procedimento de seleção aparece no início para distinguir decisões baseadas na validação das medições de teste. Cada família considera duas larguras e duas taxas, com o mesmo orçamento de 32 épocas. Todos os pesos são novos; não há transferência de redes de previsão ou de reconhecedores anteriores.',
          'tables':[('Espaço e decisões comuns', ['Item','GRU temporal','MLP de imagem'],[
              ['Larguras ocultas','128 ou 192','128 ou 256; segunda camada H/2'],
@@ -440,7 +445,7 @@ def build(output=None):
                    ('Finalistas: média das seeds 42 e 43', ['Rede','H','Taxa','CE 42','CE 43','Média'],finals)],
          'figures':fs('01_busca')},
         {'title':'Capacidade e curvas de aprendizagem','level':2,
-         'text':'A MLP de imagem não utiliza Deep Sets. Ela achata a imagem e aplica camadas densas; cada pixel mantém sua posição espacial no vetor, mas a ordem em que as linhas foram desenhadas desaparece. As larguras não igualam exatamente a quantidade de parâmetros: registramos a capacidade e o custo efetivos para tornar essa diferença verificável. Tempos de treino são da configuração escolhida com a seed 42 na GPU registrada; não incluem preparação, busca inteira ou exportação e não medem a latência do navegador. '+f'A GPU do treinamento principal foi {gpu}, com float32, algoritmos determinísticos habilitados e TF32 desligado. '
+         'text':'A MLP de imagem não utiliza Deep Sets. Ela achata a imagem e aplica camadas densas; cada pixel mantém sua posição espacial no vetor, mas a ordem em que as linhas foram desenhadas desaparece. As larguras não igualam exatamente a quantidade de parâmetros: registramos a capacidade e o custo efetivos para tornar essa diferença verificável. Tempos de treino são da configuração escolhida com a seed 42 na GPU registrada; não incluem preparação, busca inteira ou exportação e não medem a latência do navegador. '+f'A GPU do treinamento de reconhecimento foi {gpu}, com float32, algoritmos determinísticos habilitados e TF32 desligado. '
                 'As curvas permitem distinguir subajuste, saturação e afastamento entre treino e validação. Uma menor perda de treino por si só não determina o vencedor: usamos o checkpoint selecionado e depois comparamos as previsões no mesmo teste.',
          'tables':[('Configurações finais e custo observado', ['Rede','H','Taxa','Parâmetros','Segundos','Época'],architectures)],
          'figures':fs('02_aprendizagem','03_acuracia_validacao')},
@@ -454,7 +459,7 @@ def build(output=None):
         {'title':'Como apresentamos os dados e a saída',
          'text':'Para cada prefixo, calculamos sua própria caixa delimitadora. Subtraímos o centro dessa caixa e dividimos ambas as coordenadas pela maior extensão observada, com piso de uma unidade. Essa normalização é compartilhada pelas duas apresentações e usa somente o passado. Cada novo ponto pode alterar a caixa e, por isso, a demonstração recalcula o prefixo inteiro; não reutiliza um estado oculto calculado em outra normalização. Não usamos a caixa do desenho completo, a duração final ou uma categoria estimada externamente.\n\n'
                 'Na GRU, um evento tem seis atributos: deslocamentos normalizados Δx e Δy, indicador pen-up, logaritmo do intervalo de tempo transformado, e posição normalizada x e y. O primeiro deslocamento e o primeiro intervalo são zero. O lote é preenchido até 180 eventos, mas a classificação lê a saída do último evento real; padding à direita não participa dessa decisão. Na MLP, renderizamos apenas os segmentos de tinta, respeitando pen-up, numa imagem binária de 32 por 32 pixels. O vetor de entrada tem 1.024 números, sem timestamp, canal de recência, índice do evento ou rótulo.\n\n'
-                'Ambas devolvem 12 logits, transformados em probabilidades por softmax. Na equação, X representa a sequência ou o vetor de pixels conforme a rede. O alvo é o índice da categoria verdadeira. A função de perda é entropia cruzada multiclasse; não prevemos coordenadas ou completamos traços nesta tarefa principal.',
+                'Ambas devolvem 12 logits, transformados em probabilidades por softmax. Na equação, X representa a sequência ou o vetor de pixels conforme a rede. O alvo é o índice da categoria verdadeira. A função de perda é entropia cruzada multiclasse; não prevemos coordenadas ou completamos traços nesta tarefa de reconhecimento.',
          'equations':[r'\widetilde{\mathbf q}_i=\frac{\mathbf q_i-\mathbf c_t}{\max(\operatorname{largura}_t,\operatorname{altura}_t,1)},\qquad i\leq t,',
                       r'\mathbf u_i=(\Delta\widetilde x_i,\Delta\widetilde y_i,p_i,\log(1+\Delta t_i/0{,}1),\widetilde x_i,\widetilde y_i),',
                       r'\Pr(y=c\mid X_t)=\frac{\exp z_c}{\sum_{j=1}^{12}\exp z_j},\qquad \mathcal L=-\log\Pr(y=y_{\rm real}).'],
@@ -466,7 +471,7 @@ def build(output=None):
          'figures':fs('04_arquiteturas','05_representacoes')},
         {'title':'O que a recorrência pode acrescentar','level':2,
          'text':'A GRU atualiza um estado oculto em cada evento. Portas de atualização e de reset regulam quanto do estado anterior é retido e como os novos movimentos entram na representação. Isso oferece uma forma aprendida de combinar o caminho dos traços, sua ordem e as pausas. A MLP recebe todos os pixels do prefixo de uma vez e pode reconhecer estrutura espacial, inclusive antes do fim; sua entrada não permite recuperar de maneira única a ordem usada para produzir uma imagem. '
-                'Concatenar pontos num vetor e passá-los a uma MLP convencional seria outro controle válido, mas não eliminaria a ordem: cada posição do vetor corresponderia a um instante. Optamos pelo raster porque a pergunta atual é o contraste entre leitura temporal e observação da forma parcial. Como também mudamos a representação, não isolamos uma vantagem causal da GRU sobre toda rede densa possível. Deep Sets permanece apenas no estudo secundário de previsão, com identificação explícita.',
+                'Concatenar pontos num vetor e passá-los a uma MLP convencional seria outro controle válido, mas não eliminaria a ordem: cada posição do vetor corresponderia a um instante. Optamos pelo raster porque a pergunta atual é o contraste entre leitura temporal e observação da forma parcial. Como também mudamos a representação, não isolamos uma vantagem causal da GRU sobre toda rede densa possível. Deep Sets aparece na Parte I de previsão, com identificação explícita.',
          'equations':[r'\mathbf r_i=\sigma(W_r\mathbf u_i+U_r\mathbf h_{i-1}+\mathbf b_r),\quad \mathbf z_i=\sigma(W_z\mathbf u_i+U_z\mathbf h_{i-1}+\mathbf b_z),',
                       r'\widetilde{\mathbf h}_i=\tanh(W_n\mathbf u_i+\mathbf b_n+\mathbf r_i\odot(U_n\mathbf h_{i-1}+\mathbf b_{hn})),',
                       r'\mathbf h_i=(1-\mathbf z_i)\odot\widetilde{\mathbf h}_i+\mathbf z_i\odot\mathbf h_{i-1}.']},
@@ -522,33 +527,22 @@ def build(output=None):
         'pages':gallery_pages}
     insert_at=next(i for i,s in enumerate(sections) if s['title']=='Software interativo e reprodutibilidade')
     sections.insert(insert_at,gallery_section)
+    overview=sections.pop(0)
+    sections[0]['macro_title']='Reconhecimento da categoria do desenho'
     forecast=ROOT/'results/drawing_forecast_compare_v1'
-    if (forecast/'models/gru/test_metrics.json').exists():
-        forecast_metrics={f:read_json(forecast/'models'/f/'test_metrics.json') for f in NAMES}
-        forecast_rows=[]
-        for k in [5,15,30]:
-            for family in NAMES:
-                r=forecast_metrics[family]['horizons'][str(k)]
-                forecast_rows.append([k,'GRU' if family=='gru' else 'Deep Sets',num(r['ade_pixels'],2),num(r['fde_pixels'],2),num(r['pen_f1'])])
-        secondary=[]
-        for stem in ['06_examples_2d_xy','06_examples','07_examples','3_examples','03_examples','g_exemplos']:
-            path=forecast/'diagnostics'/(stem+'.pdf')
-            if path.exists():secondary=[(path,'Exemplos do estudo secundário de previsão. As cores contrastam o futuro real e as hipóteses; sua plausibilidade visual não substitui ADE, FDE ou qualidade dos levantamentos da caneta.')];break
-        sections.append({'title':'Estudo secundário: previsão dos próximos eventos',
-            'text':'Este estudo responde a outra pergunta: dadas a categoria e uma janela de movimentos já observados, quais serão as posições e os estados da caneta nos próximos k eventos? Aqui o rótulo é uma condição da entrada e k vale 5, 15 ou 30 eventos; não são dias, segundos ou classes. O modelo prevê coordenadas, pen-up/fim e intervalos de tempo. Seu desempenho não pode ser apresentado como acurácia de reconhecimento. '
-                   'O comparador desse estudo anterior é Deep Sets: uma MLP por evento seguida de média mascarada, ligada ao mesmo decoder multimodal da GRU. Ele não é a MLP de imagem do experimento principal e não é rebatizado como MLP convencional. A agregação é invariável a permutações dos vetores fixos, mas os atributos e o referencial causal do decoder conservam informação temporal local. O desenho de comparação anterior isola melhor o encoder sob um decoder comum; o principal muda também a apresentação para remover a ordem do raster. '
-                   'O ADE mede a distância média em pixels sobre o horizonte e o FDE a distância no último ponto. Uma média de trajetórias visualmente plausíveis pode ainda falhar na estrutura do objeto. As métricas de caneta permanecem limitadas: não há promessa de completamento perfeito. A busca por validação e as três seeds desse estudo estão preservadas nos artefatos, separadas dos novos treinos de reconhecimento.',
-            'tables':[('Previsão: métricas médias das três seeds, em tarefa distinta', ['k','Rede','ADE (px)','FDE (px)','F1 pen-up'],forecast_rows)],'figures':secondary})
-    sections.append({'title':'Discussão e conclusão',
-        'text':conclusion+'Os resultados sustentam uma comparação concreta entre dois sistemas para prefixos de desenhos, sem estabelecer que a recorrência seja necessária ou suficiente em todo cenário. A GRU dispõe de trajetória, pausas e separação temporal; a MLP de imagem depende da forma espacial já visível. As sondas mostram que a informação removida pode mudar a decisão, mas a relação entre sensibilidade e acerto deve ser medida, não presumida. '
+    forecasting=forecast_sections(forecast,output)
+    sections=[overview]+forecasting+sections
+    sections.append({'title':'Síntese dos dois experimentos',
+        'text':'A previsão estima movimentos futuros com uma categoria já fornecida; o reconhecimento estima essa categoria sem recebê-la como entrada. Os bons casos de previsão ilustram a aproximação de um futuro específico, sem representar todos os desenhos. As médias de erro de teste são reportadas separadamente dessa seleção visual. '+conclusion+'Os resultados sustentam uma comparação concreta entre dois sistemas para prefixos de desenhos, sem estabelecer que a recorrência seja necessária ou suficiente em todo cenário. A GRU dispõe de trajetória, pausas e separação temporal; a MLP de imagem depende da forma espacial já visível. As sondas mostram que a informação removida pode mudar a decisão, mas a relação entre sensibilidade e acerto deve ser medida, não presumida. '
                'Entre as limitações estão a seleção de desenhos previamente reconhecidos pelo jogo, as 12 categorias, o raster de baixa resolução, as diferenças de capacidade, o orçamento finito e a mudança conjunta de entrada e arquitetura. Os prefixos por fração não equivalem a um prazo em segundos, os autores não foram particionados de forma independente e o teste já foi observado em estudos anteriores. O conjunto não representa todo desenho livre possível. '
                'Um próximo controle seria comparar GRU e MLP sobre os mesmos eventos concatenados e, separadamente, MLP e CNN sobre a mesma imagem. Esses experimentos responderiam quais ganhos vêm da representação temporal, quais vêm da recorrência e quais vêm da estrutura espacial da rede. O trabalho atual mantém a interpretação restrita aos modelos, dados e protocolos efetivamente avaliados.'})
     references=[('Google Creative Lab — documentação e licença do Quick, Draw!', 'https://github.com/googlecreativelab/quickdraw-dataset'),
                 ('Cho et al. (2014) — Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation (GRU)', 'https://arxiv.org/abs/1406.1078'),
-                ('Zaheer et al. (2017) — Deep Sets (apenas comparador do estudo secundário)', 'https://arxiv.org/abs/1703.06114'),
+                ('Zaheer et al. (2017) — Deep Sets (comparador da Parte I)', 'https://arxiv.org/abs/1703.06114'),
                 ('Código, configurações e resultados do projeto', 'https://github.com/martinelipedro/projeto4-irn')]
     render(output,abstract,sections,references)
-    write_json(output/'report/report_manifest.json',{'task':'recognition_primary_forecast_secondary','figures':sum(len(s.get('figures',[]))+len(s.get('pages',[])) for s in sections),'recognition_figures':len(figures)+len(gallery_pages),'gallery_cases':len(gallery_pages),'gallery_snapshots':5*len(gallery_pages),'sections':len(sections),'models':['GRU','conventional image MLP'],'test_previously_observed':True})
+    part_titles=[section['macro_title'] for section in sections if 'macro_title' in section]
+    write_json(output/'report/report_manifest.json',{'task':'forecast_and_recognition','macro_sections':part_titles,'forecast_success_cases':sum(len(section.get('pages',[])) for section in forecasting),'forecast_gallery_only_successes':True,'figures':sum(len(s.get('figures',[]))+len(s.get('pages',[])) for s in sections),'recognition_figures':len(figures)+len(gallery_pages),'gallery_cases':len(gallery_pages),'gallery_snapshots':5*len(gallery_pages),'sections':len(sections),'models':{'forecast':['GRU','Deep Sets'],'recognition':['GRU','conventional image MLP']},'test_previously_observed':True})
     print('Relatório gerado:',output/'report/relatorio.pdf',flush=True)
 
 
