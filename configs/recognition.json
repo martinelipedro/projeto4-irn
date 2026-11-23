@@ -1,0 +1,43 @@
+{
+  "name": "drawing_recognition_compare_v2",
+  "source_experiment": "drawing_forecast_compare_v1",
+  "families": {
+    "gru": [
+      128,
+      192
+    ],
+    "mlp": [
+      128,
+      256
+    ]
+  },
+  "learning_rates": [
+    0.003,
+    0.001
+  ],
+  "fractions": [
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "epochs": 32,
+  "batch_size": 256,
+  "weight_decay": 0.0001,
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "selection_seeds": [
+    42,
+    43
+  ],
+  "threads": 4,
+  "selection": "Triagem de 4 candidatos por família na seed42; dois finalistas repetidos43; vencedora pela média da CE de validação42/43. Seed44 apenas replicação. Selecionar as duas famílias antes de avaliar teste.",
+  "input": "Mesmo prefixo e normalização geométrica causal. GRU: sequência180x6 com comprimento real. MLP: imagem32x32 binária achatada em1024 pixels, sem índices de eventos, relógio, recência, rótulo ou conexões temporais na entrada.",
+  "output": "12 probabilidades de categoria; categoria verdadeira apenas como alvo supervisionado.",
+  "test_previously_observed": true,
+  "initialization": "Todos os classificadores inicializados do zero, sem transferência de checkpoints de previsão ou reconhecimento anteriores.",
+  "pilot_note": "Um piloto interrompido, restrito à validação, mostrou subajuste da GRU em16 épocas. O protocolo principal foi congelado antes do teste com32 épocas e taxas0.003/0.001, repetidas igualmente nas duas famílias; nenhum checkpoint neural do piloto é reutilizado."
+}

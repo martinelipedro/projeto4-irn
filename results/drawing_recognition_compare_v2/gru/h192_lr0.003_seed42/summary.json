@@ -1,0 +1,16 @@
+{
+  "spec": {
+    "family": "gru",
+    "hidden": 192,
+    "lr": 0.003
+  },
+  "seed": 42,
+  "score": 0.5450072661042213,
+  "best_epoch": 26,
+  "parameters": 117516,
+  "seconds": 188.5236711110001,
+  "directory": "gru/h192_lr0.003_seed42",
+  "epochs": 32,
+  "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "from_scratch": true
+}

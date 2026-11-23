@@ -28,7 +28,9 @@ jobs:
           node-version: '24'
           package-manager-cache: false
       - name: Conferir modelos, referências e site
-        run: node site/tests/check.mjs
+        run: |
+          node site/tests/check.mjs
+          node site/forecast/tests/check.mjs
       - name: Configurar Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
       - name: Preparar artefato estático

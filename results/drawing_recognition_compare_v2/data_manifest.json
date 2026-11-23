@@ -1,0 +1,40 @@
+{
+  "classes": [
+    "cat",
+    "fish",
+    "flower",
+    "house",
+    "tree",
+    "umbrella",
+    "dog",
+    "shark",
+    "castle",
+    "cactus",
+    "car",
+    "bicycle"
+  ],
+  "labels": [
+    "Gato",
+    "Peixe",
+    "Flor",
+    "Casa",
+    "Árvore",
+    "Guarda-chuva",
+    "Cachorro",
+    "Tubarão",
+    "Castelo",
+    "Cacto",
+    "Carro",
+    "Bicicleta"
+  ],
+  "counts": {
+    "train": 36000,
+    "validation": 3000,
+    "test": 3000
+  },
+  "source_experiment": "drawing_forecast_compare_v1",
+  "source_manifest_sha256": "d1b2b88f1f13cfac4d85b47ad279114db0a989947dbc8fdda6b969794983b7fe",
+  "normalization": "Somente bbox do prefixo observado, centrada e dividida pela maior extensão; compartilhada pelas duas apresentações.",
+  "image": "32x32 binária, DDA com passos de meio pixel e pincel cruz de raio1; união de pixels sem tempo ou ordem.",
+  "test_previously_observed": true
+}

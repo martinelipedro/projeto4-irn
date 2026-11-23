@@ -1,1 +1,1 @@
-{"name":"projeto4-previsao-demo","private":true,"type":"module","scripts":{"check":"node tests/check.mjs"}}
+{"name":"projeto4-reconhecimento-demo","private":true,"type":"module","scripts":{"check":"node tests/check.mjs && node forecast/tests/check.mjs"}}

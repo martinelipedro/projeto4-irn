@@ -1,237 +1,118 @@
-import {prepareForecastPoints} from './forecast.js';
-
+import {samplePoints} from './recognition.js';
 const $=id=>document.getElementById(id);
-const colors={ink:'#223342',gru:'#d5684c',mlp:'#806aab',truth:'#418e83',muted:'#97a5ac'};
-const state={ready:false,modelReady:false,dataReady:false,examples:[],labels:[],classes:[],mode:'example',exampleIndex:0,prefix:16,horizon:15,label:0,
-  result:null,reveal:0,playing:false,processing:false,job:0,points:[],strokes:[],theme:'prefixo',startedAt:0};
-let timer=null,predictTimer=null,activePointer=null;
-const worker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});
-const currentExample=()=>state.examples[state.exampleIndex];
-const perturbation=()=>({scale:Number($('scale').value),translation:$('translation').value==='1'?[120,-80]:[0,0],shuffle:$('shuffle').checked,ignorePen:$('ignorePen').checked});
-const basePast=()=>state.mode==='example'?(currentExample()?.points.slice(0,state.prefix)??[]):state.points;
-const format=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:d,minimumFractionDigits:d}):'—';
-const px=n=>Number.isFinite(n)?format(n)+' px':'—';
-
-function stopPlayback(){clearTimeout(timer);timer=null;state.playing=false;$('play').textContent='▶ Reproduzir';}
-function startPlayback(){
-  if(!state.result)return;
-  stopPlayback();if(state.reveal>=state.horizon)state.reveal=0;
-  state.playing=true;$('play').textContent='Ⅱ Pausar';
-  const next=()=>{if(!state.playing)return;state.reveal=Math.min(state.horizon,state.reveal+1);render();if(state.reveal<state.horizon)timer=setTimeout(next,Number($('speed').value));else stopPlayback();};
-  timer=setTimeout(next,Number($('speed').value));render();
+const state={ready:false,mode:'example',examples:[],example:0,cut:0,points:[],raw:[],result:null,responseRevision:-1,processing:false,pending:false,revision:0,playing:false,timer:null,options:{reverse:false,hidePen:false,hideTime:false},history:[],labels:[]};
+const worker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});let sequence=0;const pending=new Map();
+worker.onmessage=event=>{const message=event.data,request=pending.get(message.id);if(!request)return;pending.delete(message.id);message.type==='error'?request.reject(Error(message.message)):request.resolve(message);};
+worker.onerror=event=>{for(const request of pending.values())request.reject(Error(event.message));pending.clear();showError(event.message);};
+function call(type,body={}){return new Promise((resolve,reject)=>{const id=++sequence;pending.set(id,{resolve,reject});worker.postMessage({id,type,...body});});}
+const pct=(x,digits=0)=>(100*x).toLocaleString('pt-BR',{maximumFractionDigits:digits,minimumFractionDigits:digits})+'%';
+const example=()=>state.examples[state.example];
+const observed=()=>state.mode==='example'?(example()?.points??[]).slice(0,state.cut):state.points;
+const top=p=>p.map((value,index)=>({value,index})).sort((a,b)=>b.value-a.value).slice(0,3);
+function status(text,type=''){const node=$('modelStatus');node.textContent=text;node.className='status '+type;}
+function showError(message){status('Não foi possível concluir a análise.','error');$('predictionNote').textContent=message;console.error(message);}
+function stop(){state.playing=false;clearTimeout(state.timer);state.timer=null;$('play').textContent='Reproduzir';$('play').setAttribute('aria-pressed','false');}
+function resetPerturbations(){state.options={reverse:false,hidePen:false,hideTime:false};$('hidePen').checked=false;$('hideTime').checked=false;$('reverse').textContent='Comparar ordem dos traços';}
+function changed(){state.revision++;state.pending=true;render();return pump();}
+async function pump(){
+ if(!state.ready||state.processing)return;
+ const points=observed();
+ if(points.length<2){state.pending=false;state.result=null;render();return;}
+ state.processing=true;state.pending=false;const revision=state.revision;
+ try{
+  const result=await call('recognize',{points,options:state.options});
+  if(revision===state.revision){state.result=result;state.responseRevision=revision;if(state.mode==='draw'&&!Object.values(state.options).some(Boolean)){const row={cut:points.length,gru:Math.max(...result.probabilities.gru),mlp:Math.max(...result.probabilities.mlp)};state.history=state.history.filter(r=>r.cut<row.cut);state.history.push(row);}render();}
+ }catch(error){showError(error.message);}finally{state.processing=false;if(state.pending)pump();}
 }
-
-function controls(){
-  $('exampleControls').hidden=state.mode!=='example';$('prefixControls').hidden=state.mode!=='example';$('drawTools').hidden=state.mode!=='draw';$('truthControl').hidden=state.mode!=='example';
-  for(const [id,mode] of [['exampleMode','example'],['drawMode','draw']]){$(id).classList.toggle('active',state.mode===mode);$(id).setAttribute('aria-pressed',String(state.mode===mode));}
-  $('prefix').value=state.prefix;$('prefixValue').textContent=state.prefix+' pontos';$('horizon').value=state.horizon;$('category').value=state.label;
-  const example=currentExample(),max=example?Math.min(64,example.points.length-state.horizon):64;
-  $('prefix').max=Math.max(8,max);$('prefix').disabled=!state.ready;
-  document.querySelectorAll('[data-cut]').forEach(b=>{b.disabled=!state.ready||Number(b.dataset.cut)>max;b.classList.toggle('active',Number(b.dataset.cut)===state.prefix);});
-  $('predict').disabled=!state.ready||state.processing||basePast().length<8;
-  for(const id of ['play','step','all','reveal'])$(id).disabled=!state.result;
-  $('reveal').max=state.horizon;$('reveal').value=state.reveal;$('playValue').textContent=`t + ${state.reveal} / ${state.horizon}`;
-  $('inputCanvas').style.cursor=state.mode==='draw'?'crosshair':'default';
+function setCut(cut){const n=example()?.points.length??0;state.cut=Math.max(2,Math.min(n,Math.round(cut)));changed();}
+function loadExample(index,{prefix=.25}={}){stop();resetPerturbations();state.mode='example';state.example=index;state.result=null;state.history=[];state.cut=Math.max(2,Math.floor(example().points.length*prefix+.5));$('exampleSelect').value=String(index);changed();}
+function start(){if(!state.ready||state.mode!=='example')return;if(state.playing){stop();return;}if(state.cut>=example().points.length)setCut(2);state.playing=true;$('play').textContent='Pausar';$('play').setAttribute('aria-pressed','true');schedule();}
+function schedule(){state.timer=setTimeout(()=>{if(!state.playing)return;if(state.processing){schedule();return;}if(state.cut>=example().points.length){stop();return;}setCut(state.cut+1);schedule();},Number($('speed').value));}
+function updateRanking(name,p){
+ const rankings=$(name+'Ranking');rankings.replaceChildren();
+ if(!p){$(name+'Guess').textContent='—';$(name+'Confidence').textContent='—';return;}
+ const best=top(p);$(name+'Guess').textContent=state.labels[best[0].index];$(name+'Confidence').textContent=pct(best[0].value);
+ for(const item of best){const row=document.createElement('div');row.className='rank';const header=document.createElement('div');header.className='rank-header';const label=document.createElement('span'),value=document.createElement('span');label.textContent=state.labels[item.index];value.textContent=pct(item.value,1);header.append(label,value);const track=document.createElement('div');track.className='rank-track';const bar=document.createElement('i');bar.style.width=pct(item.value,3).replace(',','.');track.append(bar);row.append(header,track);rankings.append(row);}
 }
-
-function invalidate(){stopPlayback();state.result=null;state.reveal=0;render();}
-
-function loadExample(index,{autoplay=true}={}){
-  index=Math.max(0,Math.min(state.examples.length-1,Number(index)));if(!state.examples[index])return;
-  state.mode='example';state.exampleIndex=index;const example=currentExample();state.label=Number(example.label);state.prefix=Math.min(example.default_cut??16,Math.min(64,example.points.length-state.horizon));state.prefix=Math.max(8,state.prefix);
-  $('exampleSelect').value=index;$('sourceTag').textContent=`Quick, Draw! · ${example.source_split==='test'?'teste':'validação'} · ID ${example.id}`;
-  $('exampleNote').textContent=example.explanation??example.selection_rule??'Exemplo real definido pela regra descrita no relatório.';
-  invalidate();if(state.ready)requestPrediction({autoplay});
+function drawObserved(points){
+ const canvas=$('inputCanvas'),ctx=canvas.getContext('2d'),W=canvas.width;ctx.clearRect(0,0,W,W);ctx.lineCap='round';ctx.lineJoin='round';ctx.textAlign='center';
+ if(!points.length){ctx.fillStyle='#849086';ctx.font='24px sans-serif';ctx.fillText(state.mode==='draw'?'Comece seu desenho aqui':'Escolha um exemplo',W/2,W/2);return;}
+ let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const p of points){minX=Math.min(minX,p[0]);minY=Math.min(minY,p[1]);maxX=Math.max(maxX,p[0]);maxY=Math.max(maxY,p[1]);}
+ // No modo livre o quadro mantém coordenadas fixas sob o ponteiro.
+ const extent=Math.max(maxX-minX,maxY-minY,45),scale=state.mode==='draw'?W/256:W*.72/extent;
+ const transform=p=>state.mode==='draw'?[p[0]*scale,p[1]*scale]:[(p[0]-(minX+maxX)/2)*scale+W/2,(p[1]-(minY+maxY)/2)*scale+W/2];
+ ctx.strokeStyle='#273b46';ctx.fillStyle='#273b46';ctx.lineWidth=3.7;
+ points.forEach((p,i)=>{const [x,y]=transform(p);if(i&&!points[i-1][2]){const [a,b]=transform(points[i-1]);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(x,y);ctx.stroke();}else{ctx.beginPath();ctx.arc(x,y,1.7,0,Math.PI*2);ctx.fill();}});
+ const last=transform(points.at(-1));ctx.fillStyle='#cd6045';ctx.beginPath();ctx.arc(last[0],last[1],5.2,0,Math.PI*2);ctx.fill();
 }
-
-function setPrefix(value,{autoplay=false}={}){
-  if(state.mode!=='example')return;
-  const max=Math.min(64,currentExample().points.length-state.horizon);state.prefix=Math.max(8,Math.min(max,Number(value)));invalidate();controls();requestPrediction({autoplay});
+function drawRaster(image){const canvas=$('rasterCanvas'),ctx=canvas.getContext('2d');ctx.fillStyle='#f7f6ef';ctx.fillRect(0,0,128,128);if(!image)return;ctx.fillStyle='#3f4053';for(let i=0;i<1024;i++)if(image[i])ctx.fillRect((i%32)*4,Math.floor(i/32)*4,4,4);}
+function drawSequence(points){const canvas=$('sequenceCanvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);if(!points.length)return;const width=canvas.width-16;ctx.strokeStyle='#d5ddcf';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(8,40);ctx.lineTo(canvas.width-8,40);ctx.stroke();for(let i=0;i<points.length;i++){const x=8+width*i/Math.max(points.length-1,1);ctx.fillStyle=points[i][2]?'#cd6045':'#b4bfb3';ctx.fillRect(x,points[i][2]?16:32,Math.max(2,width/points.length*.4),points[i][2]?48:16);}ctx.fillStyle='#cd6045';ctx.beginPath();ctx.arc(canvas.width-8,40,6,0,Math.PI*2);ctx.fill();}
+function drawCurve(){
+ const canvas=$('probabilityCanvas'),W=Math.max(250,canvas.getBoundingClientRect().width),H=Math.min(260,Math.max(170,W*.25)),ratio=window.devicePixelRatio||1;canvas.width=Math.round(W*ratio);canvas.height=Math.round(H*ratio);canvas.style.height=H+'px';const ctx=canvas.getContext('2d'),pad={l:42,r:17,t:20,b:33};ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,W,H);ctx.font=(W<500?'10px':'12px')+' sans-serif';ctx.textBaseline='middle';ctx.lineWidth=1;
+ const xMax=state.mode==='example'?100:Math.max(20,observed().length);const xx=x=>pad.l+x/xMax*(W-pad.l-pad.r),yy=y=>H-pad.b-y*(H-pad.t-pad.b);
+ ctx.fillStyle='#7b8987';
+ for(const p of [0,.25,.5,.75,1]){ctx.strokeStyle='#e0e6d8';ctx.beginPath();ctx.moveTo(pad.l,yy(p));ctx.lineTo(W-pad.r,yy(p));ctx.stroke();ctx.textAlign='right';ctx.fillText(pct(p),pad.l-10,yy(p));}
+ for(let i=0;i<=4;i++){const value=xMax*i/4;ctx.textAlign='center';ctx.fillText(state.mode==='example'?Math.round(value)+'%':Math.round(value),xx(value),H-pad.b+19);}
+ let records=[];
+ if(state.mode==='example'&&example()){
+  const label=example().label;records=(example().history??[]).filter(row=>(row.cut??Math.round(row.fraction*example().points.length))<=state.cut).map(row=>({x:100*(row.cut??Math.round(row.fraction*example().points.length))/example().points.length,gru:row.gru[label],mlp:row.mlp[label]}));
+  if(state.result&&state.responseRevision===state.revision){const live={x:100*state.cut/example().points.length,gru:state.result.probabilities.gru[label],mlp:state.result.probabilities.mlp[label]};records=records.filter(r=>r.x<live.x);records.push(live);}
+ }else records=state.history.map(row=>({x:row.cut,gru:row.gru,mlp:row.mlp}));
+ for(const [family,color] of [['gru','#cd6045'],['mlp','#7962a7']]){ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2.7;ctx.beginPath();records.forEach((r,i)=>i?ctx.lineTo(xx(r.x),yy(r[family])):ctx.moveTo(xx(r.x),yy(r[family])));ctx.stroke();for(const r of records){ctx.beginPath();ctx.arc(xx(r.x),yy(r[family]),3.2,0,Math.PI*2);ctx.fill();}}
+ const current=state.mode==='example'&&example()?100*state.cut/example().points.length:observed().length;ctx.strokeStyle='#7e8d7e';ctx.lineWidth=1.3;ctx.setLineDash([6,6]);ctx.beginPath();ctx.moveTo(xx(current),pad.t);ctx.lineTo(xx(current),H-pad.b);ctx.stroke();ctx.setLineDash([]);
+ if(records.length<2){ctx.fillStyle='#7b8987';ctx.textAlign='center';ctx.font=(W<500?'11px':'13px')+' sans-serif';ctx.fillText('Avance os pontos para acompanhar as hipóteses.',W*.53,H*.49);}
 }
-
-function setMode(mode){
-  if(mode==='example'){loadExample(state.exampleIndex);return;}
-  state.mode='draw';state.startedAt=state.points.length?performance.now()-state.points.at(-1)[3]*1000:0;resetPerturbations(false);$('exampleNote').textContent='Seu desenho fica no navegador. A categoria deve ser escolhida por você.';invalidate();
-  $('predictionNote').textContent='Desenhe alguns movimentos no primeiro quadro e peça uma continuação.';
-}
-
-function requestPrediction({autoplay=false}={}){
-  clearTimeout(predictTimer);if(!state.ready)return;
-  const points=basePast();if(points.length<8){$('predictionNote').textContent='Acrescente mais movimentos: o previsor precisa de pelo menos oito pontos.';return;}
-  stopPlayback();state.processing=true;state.job++;state.pendingAutoplay=autoplay;state.result=null;state.reveal=0;
-  $('predictionNote').textContent='As duas redes estão processando o mesmo passado…';
-  worker.postMessage({type:'predict',job:state.job,points,label:state.label,horizon:state.horizon,example:state.mode==='example',
-    truth:state.mode==='example'?currentExample().points.slice(state.prefix,state.prefix+state.horizon):[],perturb:perturbation()});
-  render();
-}
-
-function schedulePrediction(){invalidate();clearTimeout(predictTimer);predictTimer=setTimeout(()=>requestPrediction({autoplay:false}),140);}
-
-function selectedCondition(){
-  const p=perturbation(),example=currentExample();return (state.mode==='example'&&!!example&&Number(example.label)!==state.label)||p.scale!==1||p.translation[0]!==0||p.shuffle||p.ignorePen;
-}
-
-worker.onmessage=event=>{
-  const message=event.data;
-  if(message.type==='ready'){
-    state.modelReady=true;state.classes=message.classes;state.labels=message.labels;
-    $('category').replaceChildren(...state.labels.map((label,i)=>Object.assign(document.createElement('option'),{value:i,textContent:label})));
-    $('category').disabled=false;checkReady();
-  }else if(message.type==='prediction'&&message.job===state.job){
-    state.processing=false;state.result=message;state.reveal=0;
-    const more=message.contextCount<basePast().length?` Contexto efetivo: ${message.contextCount} eventos amostrados.`:'';
-    $('predictionNote').textContent=`Uma hipótese para os próximos ${state.horizon} pontos, com a categoria “${state.labels[state.label]}” fornecida.${more}`;
-    $('contextNote').textContent=selectedCondition()?'Entrada alterada: este é um teste exploratório de sensibilidade, fora do protocolo principal.':'Os modelos recebem apenas os pontos até t. O futuro real serve à comparação.';
-    render();if(state.pendingAutoplay)startPlayback();
-  }else if(message.type==='error'){
-    if(message.job!=null&&message.job!==state.job)return;
-    state.processing=false;
-    if(message.job==null){$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível carregar os modelos. Recarregue a página.';console.error(message.message);}
-    else $('predictionNote').textContent=message.message;
-    render();
-  }
-};
-worker.onerror=event=>{state.processing=false;$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível iniciar os modelos. Recarregue a página.';console.error(event.message);controls();};
-
-function checkReady(){
-  state.ready=state.modelReady&&state.dataReady;if(!state.ready)return;
-  $('modelStatus').className='status ready';$('modelStatus').innerHTML='<i></i> Dois modelos prontos · processamento local';
-  $('exampleSelect').disabled=false;loadExample(0);
-}
-
-function project(points,extra=[]){
-  const all=[...points,...extra].filter(p=>p?.slice(0,2).every(Number.isFinite));
-  if(!all.length)return {x:0,y:0,span:256};
-  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  for(const p of all){minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);}
-  const span=Math.max(90,maxX-minX,maxY-minY)*1.25;
-  return {x:(minX+maxX)/2-span/2,y:(minY+maxY)/2-span/2,span};
-}
-
-function stroke(ctx,points,projection,color,width=4.5,alpha=1){
-  if(points.length<2)return;
-  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.globalAlpha=alpha;
-  let active=false;ctx.beginPath();
-  for(let i=0;i<points.length;i++){
-    const p=points[i],x=(p[0]-projection.x)/projection.span*600,y=(p[1]-projection.y)/projection.span*600;
-    if(!active){ctx.moveTo(x,y);active=true;}else ctx.lineTo(x,y);
-    if(p[2])active=false;
-  }
-  ctx.stroke();ctx.restore();
-}
-
-function drawBoards(){
-  const result=state.result,past=result?.past??basePast();
-  const trueFuture=result?.truth??[],gru=result?.models.gru.points??[],mlp=result?.models.mlp.points??[];
-  const original=basePast();const transformed=perturbation().translation[0]!==0||perturbation().scale!==1;
-  const projection=project(past,[...trueFuture,...gru,...mlp,...(transformed?original:[])]);
-  const worlds={inputCanvas:state.mode==='draw'?{x:0,y:0,span:256}:projection,gruCanvas:projection,mlpCanvas:projection};
-  for(const [id,world] of Object.entries(worlds)){
-    const ctx=$(id).getContext('2d');ctx.clearRect(0,0,600,600);
-    if(id!=='inputCanvas'&&transformed)stroke(ctx,original,world,'#C3CBC9',3,.4);
-    stroke(ctx,id==='inputCanvas'&&state.mode==='draw'?state.points:past,world,colors.ink,id==='inputCanvas'?5:3.8,id==='inputCanvas'?1:.65);
-    if(id==='inputCanvas'&&!past.length){ctx.fillStyle='#93A19F';ctx.font='23px sans-serif';ctx.textAlign='center';ctx.fillText(state.mode==='draw'?'Desenhe seu começo aqui':'Preparando um exemplo…',300,295);}
-    if(id==='inputCanvas'||!result)continue;
-    if($('showTruth').checked&&state.mode==='example')stroke(ctx,[past.at(-1),...trueFuture],world,colors.truth,3.3,.55);
-    const key=id==='gruCanvas'?'gru':'mlp',model=result.models[key],visible=model.points.slice(0,state.reveal);
-    stroke(ctx,[past.at(-1),...visible],world,colors[key],5.5);
-    const latest=visible.at(-1);
-    if(latest&&!model.ended[state.reveal-1]){ctx.beginPath();ctx.arc((latest[0]-world.x)/world.span*600,(latest[1]-world.y)/world.span*600,5,0,Math.PI*2);ctx.fillStyle=colors[key];ctx.fill();}
-  }
-  const count=state.mode==='example'?state.prefix:prepareForecastPoints(state.points).length;
-  $('observedCount').textContent=`t = ${count}`;$('observedTime').textContent=past.length?format(past.at(-1)[3],2)+' s':'—';
-  for(const model of ['gru','mlp'])$(model+'Time').textContent=result&&state.reveal?format(result.models[model].points[state.reveal-1][3],2)+' s previstos':'—';
-}
-
-function drawCurve(id,axis){
-  const canvas=$(id),ctx=canvas.getContext('2d'),w=1000,h=340;ctx.clearRect(0,0,w,h);
-  const result=state.result,past=result?.past??basePast(),window=past.slice(-9),start=-(window.length-1),future=result?.truth??[];
-  const series=[{points:window.map((p,i)=>[start+i,p[axis]]),color:colors.ink,width:4}];
-  if(result){
-    for(const key of ['gru','mlp'])series.push({points:[[0,past.at(-1)[axis]],...result.models[key].points.slice(0,state.reveal).map((p,i)=>[i+1,p[axis]])],color:colors[key],width:4});
-    if($('showTruth').checked&&state.mode==='example')series.push({points:[[0,past.at(-1)[axis]],...future.map((p,i)=>[i+1,p[axis]])],color:colors.truth,width:3});
-  }
-  const ys=[...past.slice(-9),...(result?.truth??[]),...(result?.models.gru.points??[]),...(result?.models.mlp.points??[])].map(p=>p[axis]);
-  let low=ys.length?Math.min(...ys):0,high=ys.length?Math.max(...ys):256;const margin=Math.max(10,(high-low)*.13);low-=margin;high+=margin;
-  const box={left:90,right:968,top:50,bottom:278},xMax=state.horizon;
-  const x=v=>box.left+(v-Math.min(-8,start))/(xMax-Math.min(-8,start))*(box.right-box.left),y=v=>box.bottom-(v-low)/(high-low)*(box.bottom-box.top);
-  ctx.textAlign='left';ctx.font='23px sans-serif';ctx.fillStyle=colors.ink;ctx.fillText('Coordenada '+(axis===0?'X':'Y')+' (pixels)',30,31);
-  ctx.font='20px sans-serif';ctx.strokeStyle='#E2E7DF';ctx.lineWidth=1.5;
-  for(let i=0;i<=3;i++){const value=low+(high-low)*i/3,yy=y(value);ctx.beginPath();ctx.moveTo(box.left,yy);ctx.lineTo(box.right,yy);ctx.stroke();ctx.fillStyle='#84938E';ctx.textAlign='right';ctx.fillText(Math.round(value),box.left-12,yy+6);}
-  ctx.textAlign='center';for(const xx of [0,5,15,30].filter(v=>v<=state.horizon)){ctx.fillStyle='#84938E';ctx.fillText(xx===0?'t':'+'+xx,x(xx),310);}
-  ctx.save();ctx.strokeStyle='#9DAAA2';ctx.setLineDash([6,7]);ctx.beginPath();ctx.moveTo(x(0),box.top);ctx.lineTo(x(0),box.bottom);ctx.stroke();ctx.restore();
-  for(const s of series){if(s.points.length<2)continue;ctx.strokeStyle=s.color;ctx.lineWidth=s.width;ctx.beginPath();s.points.forEach((p,i)=>i?ctx.lineTo(x(p[0]),y(p[1])):ctx.moveTo(x(p[0]),y(p[1])));ctx.stroke();}
-}
-
 function render(){
-  controls();drawBoards();drawCurve('curveX',0);drawCurve('curveY',1);
-  for(const model of ['gru','mlp'])for(const [suffix,key] of [['ADE','ade'],['FDE','fde']])$(model+suffix).textContent=px(state.result?.models[model].metrics?.[key]);
-  $('metricNote').textContent=state.mode==='draw'?'Sem futuro real conhecido: seu desenho não tem erro de previsão mensurável.':selectedCondition()?'Cenário alterado: distâncias ao futuro original transformado são exploratórias.':'Erros do horizonte completo, sobre os mesmos pontos reais. Menor é melhor.';
+ const points=observed(),isExample=state.mode==='example',count=points.length;
+ $('exampleControls').hidden=!isExample;$('prefixControls').hidden=!isExample;$('drawTools').hidden=isExample;$('inputCanvas').parentElement.classList.toggle('draw',!isExample);
+ for(const [id,active] of [['exampleMode',isExample],['drawMode',!isExample]]){$(id).classList.toggle('active',active);$(id).setAttribute('aria-pressed',String(active));}
+ $('eventCount').textContent=count+' eventos';$('observedTime').textContent=count?((points.at(-1)[3]-points[0][3]).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' s observados'):'0,0 s';
+ const strokes=points.filter(p=>p[2]>.5).length+(points.length&&points.at(-1)[2]<.5?1:0);$('penInfo').textContent=strokes+' traço'+(strokes===1?'':'s');
+ if(isExample&&example()){$('prefix').value=String(Math.round(100*state.cut/example().points.length));$('prefixValue').textContent=pct(state.cut/example().points.length);$('truthLabel').innerHTML='Categoria real: <strong></strong><span>Rótulo de avaliação; nunca é entrada da rede.</span>';$('truthLabel').querySelector('strong').textContent=state.labels[example().label]??example().label_name;$('exampleNote').textContent=example().selection_rule??'';$('sourceNote').textContent='Quick, Draw! · validação · ID '+example().id;}
+ else{$('truthLabel').innerHTML='Desenho livre<strong>Categoria desconhecida</strong><span>As hipóteses são restritas às 12 categorias do estudo.</span>';$('exampleNote').textContent='Seus traços são processados localmente. Os classificadores não sabem reconhecer categorias fora das 12 usadas no treino.';}
+ document.querySelectorAll('[data-fraction]').forEach(b=>b.classList.toggle('active',isExample&&!!example()&&Math.abs(state.cut/example().points.length-Number(b.dataset.fraction)/100)<.02));
+ const result=state.result,stale=result&&state.responseRevision!==state.revision;
+ drawObserved(result&&!stale&&state.options.reverse?result.points:points);drawRaster(result?.input.image);drawSequence(result?.points??points);
+ for(const name of ['gru','mlp'])updateRanking(name,result?.probabilities[name]);
+ $('curveNote').textContent=isExample?'Probabilidade da categoria real; curvas reveladas até o prefixo observado.':'Maior probabilidade de cada rede; a categoria principal pode mudar.';
+ $('historyNote').textContent=Object.values(state.options).some(Boolean)?'Curva histórica original; último ponto reflete a perturbação.':'Cada ponto usa somente o prefixo correspondente.';
+ if(!count)$('predictionNote').textContent='Comece a desenhar. As duas redes atualizarão suas hipóteses.';
+ else if(count<2)$('predictionNote').textContent='Acrescente mais movimentos para reconhecer.';
+ else if(stale)$('predictionNote').textContent='Analisando '+count+' eventos… As hipóteses exibidas ainda correspondem a '+result.points.length+' eventos.';
+ else if(result){const a=top(result.probabilities.gru)[0],b=top(result.probabilities.mlp)[0];$('predictionNote').textContent=a.index===b.index?'As duas redes sugerem '+state.labels[a.index]+'. Probabilidade estimada não é certeza.':'A GRU sugere '+state.labels[a.index]+'; a MLP sugere '+state.labels[b.index]+'. Compare como as hipóteses evoluem.';if(state.mode==='draw'&&count>=180)$('predictionNote').textContent+=' Limite de 180 eventos: limpe o quadro para outro desenho.';}
+ if(!result&&count>=2)$('predictionNote').textContent='Analisando os '+count+' eventos observados…';
+ if(result?.comparison&&!stale){const c=result.comparison;$('orderResult').textContent=(c.sameImage?'Imagem binária idêntica. ':'A imagem mudou. ')+`Maior mudança nas probabilidades: GRU ${pct(c.gruChange,1)}; MLP ${pct(c.mlpChange,1)}. Referência e ordem invertida usam o mesmo relógio de 0,1 s e fecham o trecho parcial.`;}
+ else $('orderResult').textContent='Inverta traços inteiros. A MLP mantém os mesmos pixels; a GRU pode mudar sua hipótese. Controle fora da distribuição de treino.';
+ drawCurve();
 }
-
-const themeCopy={
-  prefixo:['O que os modelos fazem com mais contexto?','Use 8, 16, 32 e 64 para mudar o passado observado. O horizonte k conta pontos futuros. Uma continuação pode melhorar ou piorar quando novos movimentos aparecem.'],
-  cruzamentos:['O caminho importa quando as linhas se cruzam?','O exemplo contém cruzamentos no passado. Compare a continuação e os estados da caneta: ler uma sequência não garante separar perfeitamente as partes do desenho.'],
-  ordem:['A ordem do contexto antigo muda a hipótese?','A permutação altera a ordem de vetores já codificados, preserva o início e os últimos movimentos necessários ao referencial. É uma entrada artificial para testar sensibilidade, não outro desenho humano.'],
-  translacao_escala:['Mover e ampliar são duas coisas diferentes.','A translação desaparece nas posições relativas e nos deslocamentos. Já ampliar muda Δx, Δy e as posições: usar movimento não dá invariância automática à escala.'],
-  caneta:['Separar os traços também é prever.','O estado de pen-up marca uma separação entre componentes. Ocultá-lo testa a sensibilidade do encoder; o referencial geométrico original é mantido para não misturar efeitos.'],
-  ambiguidade:['Um começo, mais de um futuro possível.','Compare o mesmo prefixo condicionando a previsão a Casa ou Castelo. Você fornece a categoria: isso mostra continuações condicionais, não reconhecimento automático.']
-};
-
-function selectTheme(theme){
-  state.theme=theme;document.querySelectorAll('[data-theme]').forEach(b=>b.classList.toggle('active',b.dataset.theme===theme));
-  $('experimentTitle').textContent=themeCopy[theme][0];$('experimentDescription').textContent=themeCopy[theme][1];
-  $('alternateCategory').hidden=theme!=='ambiguidade';
-  resetPerturbations(false);
-  const candidates=state.examples.map((e,i)=>({e,i})).filter(({e})=>e.themes?.includes(theme));
-  if(candidates.length)loadExample(candidates[0].i,{autoplay:false});
-  if(theme==='ambiguidade'){
-    const index=state.examples.findIndex(e=>e.category==='house'||e.label===state.classes.indexOf('house'));
-    if(index>=0){loadExample(index,{autoplay:false});state.prefix=Math.min(16,currentExample().points.length-state.horizon);}
-  }
-  if(theme==='ordem')$('shuffle').checked=true;if(theme==='caneta')$('ignorePen').checked=false;
-  if(state.ready)requestPrediction({autoplay:false});
-  $('laboratorio').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
-}
-
-function resetPerturbations(predict=true){$('scale').value='1';$('translation').value='0';$('shuffle').checked=false;$('ignorePen').checked=false;if(predict)schedulePrediction();}
-
-$('exampleSelect').addEventListener('change',e=>loadExample(e.target.value));$('exampleMode').addEventListener('click',()=>setMode('example'));$('drawMode').addEventListener('click',()=>setMode('draw'));
-$('category').addEventListener('change',e=>{state.label=Number(e.target.value);schedulePrediction();});
-$('prefix').addEventListener('input',e=>{state.prefix=Number(e.target.value);schedulePrediction();});
-document.querySelectorAll('[data-cut]').forEach(b=>b.addEventListener('click',()=>setPrefix(b.dataset.cut)));
-$('horizon').addEventListener('change',e=>{state.horizon=Number(e.target.value);if(state.mode==='example')state.prefix=Math.min(state.prefix,currentExample().points.length-state.horizon);schedulePrediction();});
-$('predict').addEventListener('click',()=>requestPrediction({autoplay:true}));
-$('play').addEventListener('click',()=>state.playing?stopPlayback():startPlayback());$('step').addEventListener('click',()=>{stopPlayback();state.reveal=Math.min(state.horizon,state.reveal+1);render();});
-$('all').addEventListener('click',()=>{stopPlayback();state.reveal=state.horizon;render();});$('reveal').addEventListener('input',e=>{stopPlayback();state.reveal=Number(e.target.value);render();});$('showTruth').addEventListener('change',render);
-$('speed').addEventListener('change',()=>{if(state.playing){stopPlayback();startPlayback();}});
-for(const id of ['scale','translation','shuffle','ignorePen'])$(id).addEventListener('change',schedulePrediction);
-$('resetExperiment').addEventListener('click',()=>resetPerturbations());document.querySelectorAll('[data-theme]').forEach(b=>b.addEventListener('click',()=>selectTheme(b.dataset.theme)));
-$('alternateCategory').addEventListener('click',()=>{const house=state.classes.indexOf('house'),castle=state.classes.indexOf('castle');state.label=state.label===house?castle:house;schedulePrediction();});
-$('clear').addEventListener('click',()=>{state.points=[];state.strokes=[];state.startedAt=0;invalidate();$('predictionNote').textContent='Comece outro desenho no primeiro quadro.';});
-$('undo').addEventListener('click',()=>{const start=state.strokes.pop();if(start!=null)state.points.length=start;invalidate();});
-
-function pointerPoint(event){const rect=$('inputCanvas').getBoundingClientRect();return [Math.max(0,Math.min(256,(event.clientX-rect.left)/rect.width*256)),Math.max(0,Math.min(256,(event.clientY-rect.top)/rect.height*256)),0,(performance.now()-state.startedAt)/1000];}
-$('inputCanvas').addEventListener('pointerdown',event=>{if(state.mode!=='draw')return;event.preventDefault();activePointer=event.pointerId;$('inputCanvas').setPointerCapture(event.pointerId);if(!state.startedAt)state.startedAt=performance.now();state.strokes.push(state.points.length);state.points.push(pointerPoint(event));invalidate();});
-$('inputCanvas').addEventListener('pointermove',event=>{if(activePointer!==event.pointerId||state.mode!=='draw')return;const point=pointerPoint(event),last=state.points.at(-1);if(!last||Math.hypot(point[0]-last[0],point[1]-last[1])>=1.2){state.points.push(point);render();}});
-function pointerEnd(event){if(activePointer!==event.pointerId)return;activePointer=null;if(state.points.length)state.points.at(-1)[2]=1;render();if(state.points.length>=8)requestPrediction({autoplay:false});}
-$('inputCanvas').addEventListener('pointerup',pointerEnd);$('inputCanvas').addEventListener('pointercancel',pointerEnd);
-
-async function loadAssets(){
-  try{
-    const response=await fetch('assets/examples.json');if(!response.ok)throw Error('Exemplos indisponíveis.');const data=await response.json();
-    state.examples=Array.isArray(data)?data:data.examples;if(!state.examples?.length)throw Error('Nenhum exemplo disponível.');
-    $('exampleSelect').replaceChildren(...state.examples.map((e,i)=>Object.assign(document.createElement('option'),{value:i,textContent:(e.category_name??e.category??'Desenho')+(e.themes?.includes('mlp_vence')?' · caso MLP':e.themes?.includes('gru_vence')?' · caso GRU':'')})));
-    state.dataReady=true;checkReady();
-    const studyResponse=await fetch('assets/study.json');if(studyResponse.ok)renderStudy(await studyResponse.json());
-  }catch(error){$('modelStatus').className='status error';$('modelStatus').textContent='Não foi possível carregar os exemplos. Recarregue a página.';console.error(error);}
-}
-
-function renderStudy(study){
-  const rows=study.horizons??[];
-  if(rows.length)$('studyRows').replaceChildren(...rows.map(r=>{const tr=document.createElement('tr');for(const value of [r.k+' pontos',px(r.gru_ade),px(r.mlp_ade)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}return tr;}));
-  if(study.note)$('studyNote').textContent=study.note;
-}
-
-window.__forecastDemo={get ready(){return state.ready;},state,loadExample,setPrefix,predict:requestPrediction,setMode,stop:stopPlayback,render,resetPerturbations,selectTheme};
-worker.postMessage({type:'load'});loadAssets();render();
+$('exampleSelect').addEventListener('change',event=>loadExample(Number(event.target.value)));
+$('prefix').addEventListener('input',event=>{stop();setCut(example().points.length*Number(event.target.value)/100);});
+for(const button of document.querySelectorAll('[data-fraction]'))button.addEventListener('click',()=>{stop();setCut(example().points.length*Number(button.dataset.fraction)/100);});
+$('play').addEventListener('click',start);$('step').addEventListener('click',()=>{stop();setCut(state.cut+1);});$('restart').addEventListener('click',()=>{stop();setCut(2);});$('speed').addEventListener('change',()=>{if(state.playing){clearTimeout(state.timer);schedule();}});
+$('exampleMode').addEventListener('click',()=>loadExample(state.example));
+$('drawMode').addEventListener('click',()=>{stop();resetPerturbations();state.mode='draw';state.raw=[];state.points=[];state.result=null;state.history=[];changed();});
+$('reverse').addEventListener('click',()=>{stop();state.options.reverse=!state.options.reverse;$('reverse').textContent=state.options.reverse?'Ordem invertida · restaurar':'Comparar ordem dos traços';changed();});
+$('resetExperiment').addEventListener('click',()=>{resetPerturbations();changed();});
+$('hidePen').addEventListener('change',event=>{state.options.hidePen=event.target.checked;changed();});$('hideTime').addEventListener('change',event=>{state.options.hideTime=event.target.checked;changed();});
+let pointer=null,drawingStarted=0,lastRequest=0;
+const drawCanvas=$('inputCanvas');
+function append(event,lift=0){const rect=drawCanvas.getBoundingClientRect();state.raw.push([(event.clientX-rect.left)/rect.width*256,(event.clientY-rect.top)/rect.height*256,lift,(performance.now()-drawingStarted)/1000]);state.points=samplePoints(state.raw);state.result=null;}
+function drawRequest(){lastRequest=performance.now();changed();}
+function endStroke(event){if(pointer!==event.pointerId)return;append(event,1);pointer=null;drawRequest();try{drawCanvas.releasePointerCapture(event.pointerId);}catch{}}
+$('inputCanvas').addEventListener('pointerdown',event=>{if(state.mode!=='draw'||!state.ready||pointer!==null)return;event.preventDefault();pointer=event.pointerId;if(!state.raw.length)drawingStarted=performance.now();drawCanvas.setPointerCapture(pointer);append(event);drawRequest();});
+$('inputCanvas').addEventListener('pointermove',event=>{if(pointer!==event.pointerId)return;event.preventDefault();append(event);drawObserved(state.points);if(performance.now()-lastRequest>130)drawRequest();});
+$('inputCanvas').addEventListener('pointerup',endStroke);$('inputCanvas').addEventListener('pointercancel',endStroke);
+$('clear').addEventListener('click',()=>{state.raw=[];state.points=[];state.history=[];state.result=null;resetPerturbations();changed();});
+$('undo').addEventListener('click',()=>{if(!state.raw.length)return;state.raw.pop();while(state.raw.length&&!state.raw.at(-1)[2])state.raw.pop();state.points=samplePoints(state.raw);state.history=[];state.result=null;changed();});
+async function getJson(name){const response=await fetch(name);if(!response.ok)throw Error('Recurso indisponível: '+name);return response.json();}
+async function init(){try{
+ const [definitions,examplesData,study]=await Promise.all([call('load'),getJson('assets/recognition/examples.json'),getJson('assets/recognition/study.json')]);state.labels=definitions.labels;state.examples=examplesData.examples??examplesData;state.ready=true;$('learnedCategories').textContent=state.labels.join(' · ')+'.';
+ $('exampleSelect').replaceChildren();state.examples.forEach((e,i)=>{const option=document.createElement('option');option.value=String(i);option.textContent=e.title??((e.label_name??state.labels[e.label])+' · exemplo '+(i+1));$('exampleSelect').append(option);});
+ for(const id of ['exampleSelect','prefix','play','step','restart','reverse','resetExperiment'])$(id).disabled=false;
+ const rows=study.fractions??[];$('studyRows').replaceChildren();for(const row of rows){const tr=document.createElement('tr');for(const value of [pct(row.fraction),pct(row.gru_accuracy,1),pct(row.mlp_accuracy,1)]){const td=document.createElement('td');td.textContent=value;tr.append(td);}$('studyRows').append(tr);}
+ if(study.note)$('studyNote').textContent=study.note;
+ status('Dois classificadores prontos · processamento local','ready');loadExample(0);
+ }catch(error){showError(error.message);}}
+window.__recognitionDemo={state,get ready(){return state.ready;},loadExample,setCut,stop,resetPerturbations,render,changed,observed};
+window.addEventListener('resize',drawCurve);
+render();init();

@@ -1,1 +1,1 @@
-{"passed":true,"fixtures":24,"maximum_absolute_error":0.0000031682384096787253,"categories":12,"examples":14,"relative_assets":true,"model_parity":true,"backend_required":false}
+{"passed":true,"fixtures":24,"maximum_absolute_error":2.4754648209057706e-7,"categories":12,"examples":16,"conventional_mlp":true,"category_not_input":true,"same_image_order_control":true,"relative_assets":true,"model_parity":true,"backend_required":false}

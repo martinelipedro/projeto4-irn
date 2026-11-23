@@ -1,0 +1,12 @@
+{
+  "python": "3.14.7",
+  "numpy": "2.5.4",
+  "torch": "2.14.1+cu130",
+  "cuda": "13.0",
+  "cudnn": 92400,
+  "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "dtype": "float32",
+  "deterministic_algorithms": true,
+  "tf32": false,
+  "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+}

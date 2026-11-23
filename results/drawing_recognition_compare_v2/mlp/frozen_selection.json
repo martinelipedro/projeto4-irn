@@ -1,0 +1,223 @@
+{
+  "best": {
+    "spec": {
+      "family": "mlp",
+      "hidden": 256,
+      "lr": 0.001
+    },
+    "score": 0.8484141230583191,
+    "seed_scores": [
+      0.8512728959321976,
+      0.8455553501844406
+    ]
+  },
+  "screening": [
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 128,
+        "lr": 0.003
+      },
+      "seed": 42,
+      "score": 0.9227315783500671,
+      "best_epoch": 32,
+      "parameters": 140236,
+      "seconds": 4.893313244000183,
+      "directory": "mlp/h128_lr0.003_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 128,
+        "lr": 0.001
+      },
+      "seed": 42,
+      "score": 0.948181539773941,
+      "best_epoch": 32,
+      "parameters": 140236,
+      "seconds": 5.167766356000357,
+      "directory": "mlp/h128_lr0.001_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.003
+      },
+      "seed": 42,
+      "score": 0.8491428941488266,
+      "best_epoch": 31,
+      "parameters": 296844,
+      "seconds": 5.289468798000144,
+      "directory": "mlp/h256_lr0.003_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.001
+      },
+      "seed": 42,
+      "score": 0.8512728959321976,
+      "best_epoch": 32,
+      "parameters": 296844,
+      "seconds": 5.3506368809999,
+      "directory": "mlp/h256_lr0.001_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    }
+  ],
+  "finalists": [
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.003
+      },
+      "score": 0.8484510779380798,
+      "seed_scores": [
+        0.8491428941488266,
+        0.8477592617273331
+      ]
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.001
+      },
+      "score": 0.8484141230583191,
+      "seed_scores": [
+        0.8512728959321976,
+        0.8455553501844406
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 128,
+        "lr": 0.003
+      },
+      "seed": 42,
+      "score": 0.9227315783500671,
+      "best_epoch": 32,
+      "parameters": 140236,
+      "seconds": 4.893313244000183,
+      "directory": "mlp/h128_lr0.003_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 128,
+        "lr": 0.001
+      },
+      "seed": 42,
+      "score": 0.948181539773941,
+      "best_epoch": 32,
+      "parameters": 140236,
+      "seconds": 5.167766356000357,
+      "directory": "mlp/h128_lr0.001_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.003
+      },
+      "seed": 42,
+      "score": 0.8491428941488266,
+      "best_epoch": 31,
+      "parameters": 296844,
+      "seconds": 5.289468798000144,
+      "directory": "mlp/h256_lr0.003_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.001
+      },
+      "seed": 42,
+      "score": 0.8512728959321976,
+      "best_epoch": 32,
+      "parameters": 296844,
+      "seconds": 5.3506368809999,
+      "directory": "mlp/h256_lr0.001_seed42",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.003
+      },
+      "seed": 43,
+      "score": 0.8477592617273331,
+      "best_epoch": 32,
+      "parameters": 296844,
+      "seconds": 4.674907505999727,
+      "directory": "mlp/h256_lr0.003_seed43",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.001
+      },
+      "seed": 43,
+      "score": 0.8455553501844406,
+      "best_epoch": 31,
+      "parameters": 296844,
+      "seconds": 4.869891611000185,
+      "directory": "mlp/h256_lr0.001_seed43",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    },
+    {
+      "spec": {
+        "family": "mlp",
+        "hidden": 256,
+        "lr": 0.001
+      },
+      "seed": 44,
+      "score": 0.8512691333889961,
+      "best_epoch": 31,
+      "parameters": 296844,
+      "seconds": 4.814849514999878,
+      "directory": "mlp/h256_lr0.001_seed44",
+      "epochs": 32,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "from_scratch": true
+    }
+  ],
+  "criterion": "Triagem de 4 candidatos por família na seed42; dois finalistas repetidos43; vencedora pela média da CE de validação42/43. Seed44 apenas replicação. Selecionar as duas famílias antes de avaliar teste.",
+  "test_used": false,
+  "test_previously_observed": true
+}

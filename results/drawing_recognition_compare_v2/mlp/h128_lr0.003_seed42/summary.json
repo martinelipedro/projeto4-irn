@@ -1,0 +1,16 @@
+{
+  "spec": {
+    "family": "mlp",
+    "hidden": 128,
+    "lr": 0.003
+  },
+  "seed": 42,
+  "score": 0.9227315783500671,
+  "best_epoch": 32,
+  "parameters": 140236,
+  "seconds": 4.893313244000183,
+  "directory": "mlp/h128_lr0.003_seed42",
+  "epochs": 32,
+  "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "from_scratch": true
+}

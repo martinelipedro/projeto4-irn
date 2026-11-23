@@ -1,0 +1,11 @@
+{
+  "task": "recognition_primary_forecast_secondary",
+  "figures": 17,
+  "recognition_figures": 16,
+  "sections": 16,
+  "models": [
+    "GRU",
+    "conventional image MLP"
+  ],
+  "test_previously_observed": true
+}

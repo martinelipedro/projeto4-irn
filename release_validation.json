@@ -1,16 +1,82 @@
 {
   "passed": true,
-  "python_tests": 4,
+  "task": "recognition_primary_forecast_secondary",
+  "python_tests": 8,
   "site": {
     "passed": true,
     "fixtures": 24,
-    "maximum_absolute_error": 3.1682384096787253e-06,
+    "maximum_absolute_error": 2.4754648209057706e-07,
     "categories": 12,
-    "examples": 14,
+    "examples": 16,
+    "conventional_mlp": true,
+    "category_not_input": true,
+    "same_image_order_control": true,
     "relative_assets": true,
     "model_parity": true,
     "backend_required": false
   },
-  "pdf_sha256": "7d34ce46908fe21d60910c06de60d3fec409181ed339a26cab90db7969086d73",
-  "task": "forecasting_only"
+  "browser": {
+    "passed": true,
+    "url": "http://127.0.0.1:8877/",
+    "browser": "Firefox BiDi",
+    "modelInfo": [
+      {
+        "family": "gru",
+        "hidden": 192,
+        "seed": 42
+      },
+      {
+        "family": "mlp",
+        "hidden": 256,
+        "seed": 42
+      }
+    ],
+    "final_artifacts": true,
+    "checks": [
+      "inferência real dos dois modelos",
+      "12 saídas sem categoria de entrada",
+      "top3",
+      "prefixo16",
+      "passo17",
+      "ritmo lento600ms",
+      "pausa",
+      "mesma imagem na inversão de traços",
+      "MLP invariável à ordem",
+      "ablação pen-up apenasGRU",
+      "ablação relógio apenasGRU",
+      "desenho por mouse",
+      "desfazer",
+      "390px sem overflow"
+    ]
+  },
+  "science": {
+    "passed": true,
+    "classifiers_from_scratch": true,
+    "ordinary_mlp_pixels": true,
+    "category_not_in_input": true,
+    "selection_validation_only": true,
+    "epochs_per_run": 32,
+    "test_drawings": 3000,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "export_matches_checkpoints": true,
+    "metrics_recomputed": true,
+    "all_demo_examples_validation": true,
+    "same_bitmap_order_probe": true
+  },
+  "report": {
+    "task": "recognition_primary_forecast_secondary",
+    "figures": 17,
+    "recognition_figures": 16,
+    "sections": 16,
+    "models": [
+      "GRU",
+      "conventional image MLP"
+    ],
+    "test_previously_observed": true
+  },
+  "pdf_sha256": "f04c8e24bd946b77044ecfdbadd54002ced5b403ba867c406883d76f1621662b"
 }

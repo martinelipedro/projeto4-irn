@@ -1,0 +1,141 @@
+{
+  "fractions": [
+    {
+      "fraction": 0.25,
+      "gru_accuracy": 0.6362222222222222,
+      "mlp_accuracy": 0.5146666666666667,
+      "gru_f1": 0.6325396107372562,
+      "mlp_f1": 0.5051608301750498
+    },
+    {
+      "fraction": 0.5,
+      "gru_accuracy": 0.8286666666666666,
+      "mlp_accuracy": 0.698111111111111,
+      "gru_f1": 0.8282001631372232,
+      "mlp_f1": 0.6966811253599432
+    },
+    {
+      "fraction": 0.75,
+      "gru_accuracy": 0.9050000000000001,
+      "mlp_accuracy": 0.8109999999999999,
+      "gru_f1": 0.9050163923408944,
+      "mlp_f1": 0.8102130970090737
+    },
+    {
+      "fraction": 1.0,
+      "gru_accuracy": 0.9303333333333333,
+      "mlp_accuracy": 0.8371111111111111,
+      "gru_f1": 0.9305044103815111,
+      "mlp_f1": 0.8381826566896016
+    }
+  ],
+  "note": "Médias das três inicializações 42/43/44 no teste previamente observado. Demonstração com seed 42; exemplos exclusivamente de validação.",
+  "probes": [
+    {
+      "family": "gru",
+      "scenario": "original",
+      "n": 240,
+      "accuracy": 0.8875,
+      "macro_f1": 0.8889229162137929,
+      "mean_abs_probability_change": 0.0,
+      "prediction_change_fraction": 0.0
+    },
+    {
+      "family": "mlp",
+      "scenario": "original",
+      "n": 240,
+      "accuracy": 0.8458333333333333,
+      "macro_f1": 0.8445142164654359,
+      "mean_abs_probability_change": 0.0,
+      "prediction_change_fraction": 0.0
+    },
+    {
+      "family": "gru",
+      "scenario": "hidden_penup",
+      "n": 240,
+      "accuracy": 0.7875,
+      "macro_f1": 0.7858942135007503,
+      "mean_abs_probability_change": 0.02658441662788391,
+      "prediction_change_fraction": 0.15833333333333333
+    },
+    {
+      "family": "mlp",
+      "scenario": "hidden_penup",
+      "n": 240,
+      "accuracy": 0.8458333333333333,
+      "macro_f1": 0.8445142164654359,
+      "mean_abs_probability_change": 0.0,
+      "prediction_change_fraction": 0.0
+    },
+    {
+      "family": "gru",
+      "scenario": "zero_clock",
+      "n": 240,
+      "accuracy": 0.6125,
+      "macro_f1": 0.5915195246289519,
+      "mean_abs_probability_change": 0.0654292032122612,
+      "prediction_change_fraction": 0.38333333333333336
+    },
+    {
+      "family": "mlp",
+      "scenario": "zero_clock",
+      "n": 240,
+      "accuracy": 0.8458333333333333,
+      "macro_f1": 0.8445142164654359,
+      "mean_abs_probability_change": 0.0,
+      "prediction_change_fraction": 0.0
+    },
+    {
+      "family": "gru",
+      "scenario": "uniform_clock",
+      "n": 240,
+      "accuracy": 0.7958333333333333,
+      "macro_f1": 0.7950944926587601,
+      "mean_abs_probability_change": 0.034881591796875,
+      "prediction_change_fraction": 0.1875
+    },
+    {
+      "family": "mlp",
+      "scenario": "uniform_clock",
+      "n": 240,
+      "accuracy": 0.8458333333333333,
+      "macro_f1": 0.8445142164654359,
+      "mean_abs_probability_change": 0.0,
+      "prediction_change_fraction": 0.0
+    },
+    {
+      "family": "gru",
+      "scenario": "reordered_strokes_uniform_clock",
+      "n": 240,
+      "accuracy": 0.65,
+      "macro_f1": 0.6610835155586171,
+      "mean_abs_probability_change": 0.051867421716451645,
+      "prediction_change_fraction": 0.2791666666666667
+    },
+    {
+      "family": "mlp",
+      "scenario": "reordered_strokes_uniform_clock",
+      "n": 240,
+      "accuracy": 0.8458333333333333,
+      "macro_f1": 0.8445142164654359,
+      "mean_abs_probability_change": 0.0,
+      "prediction_change_fraction": 0.0
+    }
+  ],
+  "controls": {
+    "same_bitmap": true,
+    "n_probe": 240,
+    "n_multistroke": 193,
+    "max_geometry_token_difference": 2.0489096641540527e-07,
+    "translation": [
+      128,
+      -64
+    ],
+    "scale": 2,
+    "order_baseline": "uniform_clock",
+    "order_probe": "reordered_strokes_uniform_clock",
+    "order_baseline_final_penup_forced": true,
+    "probe_split": "validation",
+    "probe_sampling": "Primeiros 20 IDs de cada categoria no manifesto, prefixo de 75%, sem selecionar por erro."
+  }
+}
