@@ -2,6 +2,25 @@
 
 Investigamos o reconhecimento progressivo de 12 categorias de desenhos do Quick, Draw!. Uma GRU recebe eventos ordenados da caneta; uma MLP convencional recebe a imagem binária do mesmo prefixo, sem ordem de execução. Selecionamos hiperparâmetros por validação, treinamos do zero e repetimos as configurações escolhidas com três inicializações. No desenho completo, a acurácia média foi 93,0% para a GRU e 83,7% para a MLP, uma diferença de 9,32 pontos percentuais (GRU menos MLP). Com apenas 25% dos eventos, os valores foram 63,6% e 51,5%, respectivamente. A análise inclui aprendizado, probabilidades, confusões, exemplos e perturbações de ordem, pausas e pen-up. A comparação altera arquitetura e representação conjuntamente e não prova superioridade universal da recorrência. Um estudo secundário, explicitamente separado nas perguntas e métricas, examina a previsão de eventos futuros.
 
+## O que fizemos?
+
+Construímos um sistema que recebe um desenho ainda em andamento e tenta reconhecer qual objeto está sendo desenhado. Comparamos duas formas de observar o mesmo desenho parcial: uma GRU acompanha a sequência de movimentos da caneta, enquanto uma MLP convencional observa sua forma como imagem. As duas redes atualizam seus palpites conforme chegam novos pontos.
+
+Os dados vêm do Google Quick, Draw!, um jogo em que pessoas desenham objetos solicitados. Cada registro associa uma categoria a uma sequência de traços, com coordenadas X/Y e tempos dos pontos. Derivamos os levantamentos da caneta dos limites desses traços. Assim, podemos revelar o desenho aos poucos e estudar uma série temporal multivariada, em vez de usar apenas sua imagem final.
+
+Nosso recorte contém 42.000 desenhos de 12 categorias, como peixe, gato, casa e bicicleta. São 36.000 desenhos para aprender os padrões, 3.000 para ajustar as configurações e 3.000 para avaliar os modelos escolhidos. Retivemos apenas desenhos reconhecidos pelo próprio jogo e mantivemos cada desenho inteiro em uma única partição.
+
+Transformamos cada desenho em versões parciais. A GRU recebe movimentos, pausas e posições em ordem; a MLP recebe os pixels da imagem parcial. A categoria verdadeira serve somente para ensinar e avaliar, nunca como entrada. A saída de ambas é uma probabilidade para cada uma das 12 categorias.
+
+Treinamos as redes do zero, buscamos larguras e taxas de aprendizagem na validação e repetimos as configurações escolhidas com 3 inicializações. Comparamos acertos, erros e probabilidades ao longo do desenho, além de testar mudanças de ordem e de canais temporais. O site executa os modelos treinados e a galeria mostra exemplos reais passo a passo. O reconhecimento é o estudo principal; a previsão de próximos pontos aparece como experimento secundário.
+
+**Resumo da comparação principal**
+
+| Rede | O que recebe | O que devolve |
+|---|---|---|
+| GRU temporal | Movimentos da caneta em ordem | Probabilidades de 12 categorias |
+| MLP convencional | Imagem parcial em 1.024 pixels | Probabilidades de 12 categorias |
+
 ## Objetivo e ajuste dos hiperparâmetros
 
 O objetivo principal é classificar uma janela temporal crescente de movimentos da caneta: reconhecer o objeto antes de o usuário terminar. Em vez de fornecer a categoria e pedir uma continuação, como no estudo de previsão, removemos a categoria da entrada e pedimos uma distribuição sobre as 12 categorias. A pergunta experimental é como um sistema que lê a sequência se compara a uma MLP convencional que observa somente o desenho parcial como imagem. Não pressupomos que a GRU ganhe em todo prefixo, categoria ou exemplo. O procedimento de seleção aparece no início para distinguir decisões baseadas na validação das medições de teste. Cada família considera duas larguras e duas taxas, com o mesmo orçamento de 32 épocas. Todos os pesos são novos; não há transferência de redes de previsão ou de reconhecedores anteriores.

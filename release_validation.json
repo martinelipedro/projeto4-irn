@@ -73,15 +73,16 @@
     "recognition_figures": 29,
     "gallery_cases": 13,
     "gallery_snapshots": 65,
-    "sections": 17,
+    "sections": 18,
     "models": [
       "GRU",
       "conventional image MLP"
     ],
     "test_previously_observed": true,
-    "pages": 30
+    "pages": 31,
+    "opening_overview_page": 1
   },
-  "pdf_sha256": "8e6b81638f8ba5c7e901ce916bb0eba78c3b0f82b9311cada744a7c8b0e34b72",
+  "pdf_sha256": "7d3d44737e1df6345a80cec86fb0912461e74662d91116d938c3f8901a707abd",
   "gallery": {
     "passed": true,
     "cases": 13,

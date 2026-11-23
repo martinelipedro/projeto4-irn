@@ -4,7 +4,7 @@
   "recognition_figures": 29,
   "gallery_cases": 13,
   "gallery_snapshots": 65,
-  "sections": 17,
+  "sections": 18,
   "models": [
     "GRU",
     "conventional image MLP"
